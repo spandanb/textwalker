@@ -1,3 +1,4 @@
+from typing import List
 
 
 def arr2str(arr):
@@ -155,6 +156,35 @@ class PatternParser:
     def peek_next_next(self) -> str:
         return self.pattern[self.current + 2]
 
+    def coalesce_literals(self, arr: List[Token]) -> List[Token]:
+        """
+        coalesce adjacent literal chars into literal word;
+        non-literal Tokens' relative ordering is untouched
+
+        context: in a group, initially each char is it's own literal
+        we need to coalesce literals to words so we can
+        match on, e.g. word repetitions
+        """
+        coalesced = []
+        partials = []
+        for idx, ele in enumerate(arr):
+            if isinstance(ele, Literal):
+                partials.append(ele)
+            elif len(partials) > 0:
+                # coalesce and add to result
+                value = ''.join([literal.value for literal in partials])
+                coalesced.append(Literal(value))
+                partials = []
+
+            # add all other tokens as is
+            if not isinstance(ele, Literal):
+                coalesced.append(ele)
+
+        if len(partials) > 0:
+            value = ''.join([literal.value for literal in partials])
+            coalesced.append(Literal(value))
+        return coalesced
+
     def compile(self):
         self.compiled = self.compile_grouping()
 
@@ -201,7 +231,7 @@ class PatternParser:
             elif ch == ')':
                 if is_nested:
                     # this terminates the grouping
-                    return Grouping(compiled)
+                    return Grouping(self.coalesce_literals(compiled))
                 raise UnescapedChar(")")
             elif ch == '[':
                 # this will either succeed and consume and return
@@ -220,6 +250,7 @@ class PatternParser:
                 elif ch == '+':
                     matchable.quantifier = OneOrMore()
                 else:  # ?
+                    assert ch == '?', "unknown quantifier"
                     matchable.quantifier = ZeroOrOne()
             elif ch == '{':
                 # this will either succeed and consume the entire quantifier
@@ -230,7 +261,7 @@ class PatternParser:
             else:
                 compiled.append(Literal(ch))
 
-        return Grouping(compiled)
+        return Grouping(self.coalesce_literals(compiled))
 
     def compile_charset(self) -> Charset:
         """
@@ -302,10 +333,22 @@ class PatternParser:
             return True
             # return current_repetition >= 1
 
-    def match_literal(self, literal: Literal, string: str, startidx: int = 0) -> MatchResult:
+    def match_literal_old(self, literal: Literal, string: str, startidx: int = 0) -> MatchResult:
         if literal.value == string[startidx]:
             return MatchResult(True, literal.value)
         return MatchResult(False)
+
+    def match_literal(self, literal: Literal, string: str, startidx: int = 0) -> MatchResult:
+        # I think I need to distinguish a partial match vs.
+        #
+        for idx, lch in enumerate(literal.value):
+            if lch != string[startidx + idx]:
+                if idx == 0:
+                    return MatchResult(False)
+                else:
+                    partial_match = literal.value[:idx]
+                    return MatchResult(False, partial_match, is_partial=True)
+        return MatchResult(True, literal.value)
 
     def match_charset(self, charset: Charset, string: str, startidx: int = 0) -> MatchResult:
         for charset_member in charset.matches:
@@ -387,8 +430,10 @@ class PatternParser:
                     matched.append(res.content)
                     sptr += len(res.content)
                     # also increment gptr
-                    repetition = 0
-                    gptr += 1
+                    # repetition = 0
+                    # only increment, when no consumption?
+                    # but then
+                    # gptr += 1
                 # current component did not match
                 else:
                     # no match, move to next matchable
@@ -439,21 +484,24 @@ class PatternParser:
 
 def tests():
     # triples of pattern, match, expected_result
-    test_cases = [("car", "car", "car"),
+    test_cases = [
+                  ("car", "car", "car"),
                   ("[a-z]+", "dat9", "dat"),
                   ("([a-z]+)", "dat9", "dat"),
                   ("([a-z]+)3", "a32", "a3"),
                   ("([a-z]+)3", "3a", ""),
+                  ("(hello)+", "hellohello", "hellohello")
                   ]
     for idx, (pattern, match, expected) in enumerate(test_cases):
         pat = PatternParser(pattern)
         pat.compile()
         result = pat.match(match)
+        # print(f'compiled pattern is {pat.compiled}')
         if result == expected:
             print(f'{idx+1} passed')
         else:
             print(f'{idx+1} failed pattern:{pattern}, match:{match}, expected:{expected}, actual:{result}')
-            break
+            # break
 
 
 def test0():
@@ -466,6 +514,9 @@ def test0():
 def test1():
     # pattern, match, _ = ("[a-z]+", "dat9", "dat")
     # pattern, match = "([a-z]+)3", "a3"
+
+    # TOOD: fixme; this is failing because the quantifier isn't being applied properly
+    # likely need to fix coalesce
     pattern, match = "(hello)+", "hellohello"
     pat = PatternParser(pattern)
     pat.compile()
