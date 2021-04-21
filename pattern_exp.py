@@ -124,13 +124,9 @@ class Disjunction:
 
 
 class MatchResult:
-    def __init__(self, matched: bool, content: str = None, partial_match: bool = False, pattern_consumed: bool = True):
+    def __init__(self, matched: bool, content: str = None):
         self.matched = matched
         self.content = content
-        # whether the user input was fully consumed
-        self.partial_match = partial_match
-        # whether the pattern was fully matched - only needed for grouping
-        self.pattern_consumed = pattern_consumed
 
 
 class PatternParser:
@@ -344,11 +340,7 @@ class PatternParser:
     def match_literal(self, literal: Literal, string: str, startidx: int = 0) -> MatchResult:
         for idx, lch in enumerate(literal.value):
             if lch != string[startidx + idx]:
-                if idx == 0:
-                    return MatchResult(False)
-                else:
-                    partial_match = literal.value[:idx]
-                    return MatchResult(False, partial_match, is_partial=True)
+                return MatchResult(False)
         return MatchResult(True, literal.value)
 
     def match_charset(self, charset: Charset, string: str, startidx: int = 0) -> MatchResult:
@@ -362,11 +354,16 @@ class PatternParser:
                     return MatchResult(True, string[startidx])
         return MatchResult(False)
 
-    def match_grouping(self, groupings: Grouping, string: str, startidx: int = 0, match_partial=True) -> MatchResult:
+    def match_grouping(self, groupings: Grouping, string: str, startidx: int = 0) -> MatchResult:
         """
         return longest match
         if this gets too complex, it might make sense to have separate classes for
         compiling and matching
+
+
+        NOTES: on the matching logic:
+        - the user string may be partially consumed
+        - but generally, the pattern must be fully consumed
 
         args:
             # a better name might be consume_full_pattern
@@ -375,6 +372,8 @@ class PatternParser:
                 user string partially matching is never an error
 
             startidx: of string
+
+            return[MatchResult].matched is True if there is a complete match; else False
 
         """
 
@@ -386,7 +385,6 @@ class PatternParser:
         # the last gptr location where a match was found
         # needed to determine if the pattern was fully consumed
         last_gptr_matched = -1
-        force_increment_gptr = False # needed when ()*a cases
         # whether the subgroup has matched
         while sptr < len(string) and gptr < len(groups):
 
@@ -397,6 +395,7 @@ class PatternParser:
             # consume as much of string (maximum munch) using subgroup
             subgroup = groups[gptr]
 
+            # does the quantifier on this subgroup, allow it to consume more chars
             if self.can_consume(repetition, subgroup.quantifier):
 
                 # invoke the right handler
@@ -409,20 +408,11 @@ class PatternParser:
                     assert isinstance(subgroup, Grouping), "unexpected sub-expression type"
                     # groupings can be nested
                     # so the matching algorithm must be recursive
-                    # todo: e.g. ((foo)+)*, even if inside (+) fails, the outside (*) should still pass
-                    try:
-                        res = self.match_grouping(subgroup, string, sptr, match_partial=False)
-                    except PatternPartialMatch:
-                        # if quantifier is [0,..]
-                        if isinstance(subgroup.quantifier, ZeroOrMore) or isinstance(subgroup.quantifier, ZeroOrOne):
-                            res = MatchResult(True, "")
-                            # actually, what we want to do here is now;
-                            # increment the gptr
-                            # maybe this can be refactored
-                            force_increment_gptr = True
-
-                        else:
-                            raise
+                    res = self.match_grouping(subgroup, string, sptr)
+                    # if quantifier is [0,..] and no-match, this is treated
+                    # as a match of len 0;
+                    if res.matched is False and isinstance(subgroup.quantifier, ZeroOrMore) or isinstance(subgroup.quantifier, ZeroOrOne):
+                        res = MatchResult(True, "")
 
                 assert res is not None, "res cannot be None"
 
@@ -433,17 +423,13 @@ class PatternParser:
                     # increment string pointer
                     sptr += len(res.content)
                     last_gptr_matched = gptr
-                    if force_increment_gptr:
-                        gptr += 1
-                        force_increment_gptr = False
 
-                # current component matched, but did not fully consume the input string
-                elif res.partial_match:
-                    matched.append(res.content)
-                    sptr += len(res.content)
-                    # only increment, when there is no consumption
-                    # NOTE: not entirely sure about this; document better
-                    last_gptr_matched = gptr
+                    # increment the gptr; this represents
+                    # something not matching with [0,...] quantifier
+                    # we treat this as-a 0len match
+                    if len(res.content) == 0:
+                        gptr += 1
+                        repetition = 0
 
                 # current component did not match
                 else:
@@ -464,16 +450,13 @@ class PatternParser:
 
         # we want the pattern to be fully consumed and at least one
         # group has not been matched
-        if not match_partial and last_gptr_matched < len(groups) - 1:
-            raise PatternPartialMatch
-
         content = arr2str(matched)
-        if len(content) > 0:
+        if len(content) == 0 or last_gptr_matched < len(groups) - 1:
             # this seems to be needed because it attempts partial match
             # perhaps this should be labelled better
-            return MatchResult(True, content)
+            return MatchResult(False)
 
-        return MatchResult(False)
+        return MatchResult(True, content)
 
     def match(self, string) -> str:
         if self.compiled is None:
@@ -499,7 +482,7 @@ def tests():
         ("(hel[a-z]p)+", "helxphelyp", "helxphelyp"),
         ("(hel[a-z]p)+", "helxphelyp9", "helxphelyp"), # erroring
         ("(x[a-z]y)+", "xay9", "xay"),
-        ("(x[a-z]+y)*a", "xya", "a")
+        ("(x[a-z]+y)*a", "a", "a")
     ]
     for idx, (pattern, match, expected) in enumerate(test_cases):
         pat = PatternParser(pattern)
@@ -535,5 +518,5 @@ def test1():
 
 if __name__ == '__main__':
     #test0()
-    test1()
-    #tests()
+    #test1()
+    tests()
