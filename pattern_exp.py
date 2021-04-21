@@ -42,6 +42,13 @@ class MinMatchesNotFound(Exception):
     pass
 
 
+class PatternPartialMatch(Exception):
+    """
+    The pattern was not fully consumed
+    """
+    pass
+
+
 class UnescapedChar(Exception):
     """
     These represent the constraint that special chars be escaped
@@ -117,11 +124,13 @@ class Disjunction:
 
 
 class MatchResult:
-    def __init__(self, matched: bool, content: str = None, partial_match: bool = False):
+    def __init__(self, matched: bool, content: str = None, partial_match: bool = False, pattern_consumed: bool = True):
         self.matched = matched
         self.content = content
         # whether the user input was fully consumed
         self.partial_match = partial_match
+        # whether the pattern was fully matched - only needed for grouping
+        self.pattern_consumed = pattern_consumed
 
 
 class PatternParser:
@@ -360,9 +369,13 @@ class PatternParser:
         compiling and matching
 
         args:
-            match_partial: whether to return a partial match or raise an exception
+            # a better name might be consume_full_pattern
+            match_partial: if True, will return if pattern partially matches;
+                else raises Exception
+                user string partially matching is never an error
 
-                in the top call, return partial, but any nested
+            startidx: of string
+
         """
 
         groups = groupings.groups
@@ -370,9 +383,11 @@ class PatternParser:
         sptr = startidx  # string ptr
         repetition = 0
         matched = []
+        # the last gptr location where a match was found
+        # needed to determine if the pattern was fully consumed
+        last_gptr_matched = -1
+        force_increment_gptr = False # needed when ()*a cases
         # whether the subgroup has matched
-        # e.g. "[a-z]+", "a9" should match "a"; this tracks
-        subgroup_matched = False
         while sptr < len(string) and gptr < len(groups):
 
             # there are 2 things to check:
@@ -395,7 +410,21 @@ class PatternParser:
                     # groupings can be nested
                     # so the matching algorithm must be recursive
                     # todo: e.g. ((foo)+)*, even if inside (+) fails, the outside (*) should still pass
-                    res = self.match_grouping(subgroup, string, sptr)
+                    try:
+                        res = self.match_grouping(subgroup, string, sptr, match_partial=False)
+                    except PatternPartialMatch:
+                        # if quantifier is [0,..]
+                        if isinstance(subgroup.quantifier, ZeroOrMore) or isinstance(subgroup.quantifier, ZeroOrOne):
+                            res = MatchResult(True, "")
+                            # actually, what we want to do here is now;
+                            # increment the gptr
+                            # maybe this can be refactored
+                            force_increment_gptr = True
+
+                        else:
+                            raise
+
+                assert res is not None, "res cannot be None"
 
                 # current component matched
                 if res.matched:
@@ -403,13 +432,18 @@ class PatternParser:
                     matched.append(res.content)
                     # increment string pointer
                     sptr += len(res.content)
+                    last_gptr_matched = gptr
+                    if force_increment_gptr:
+                        gptr += 1
+                        force_increment_gptr = False
 
-                # current component partially matched
+                # current component matched, but did not fully consume the input string
                 elif res.partial_match:
                     matched.append(res.content)
                     sptr += len(res.content)
                     # only increment, when there is no consumption
                     # NOTE: not entirely sure about this; document better
+                    last_gptr_matched = gptr
 
                 # current component did not match
                 else:
@@ -428,7 +462,18 @@ class PatternParser:
                 repetition = 0
                 continue
 
-        return MatchResult(True, arr2str(matched))
+        # we want the pattern to be fully consumed and at least one
+        # group has not been matched
+        if not match_partial and last_gptr_matched < len(groups) - 1:
+            raise PatternPartialMatch
+
+        content = arr2str(matched)
+        if len(content) > 0:
+            # this seems to be needed because it attempts partial match
+            # perhaps this should be labelled better
+            return MatchResult(True, content)
+
+        return MatchResult(False)
 
     def match(self, string) -> str:
         if self.compiled is None:
@@ -445,15 +490,17 @@ class PatternParser:
 def tests():
     # triples of pattern, match, expected_result
     test_cases = [
-                  ("car", "car", "car"),
-                  ("[a-z]+", "dat9", "dat"),
-                  ("([a-z]+)", "dat9", "dat"),
-                  ("([a-z]+)3", "a32", "a3"),
-                  ("([a-z]+)3", "3a", ""),
-                  ("(hello)+", "hellohello", "hellohello"),
-                  ("(hel[a-z]p)+", "helxphelyp", "helxphelyp"),
-                  #("(hel[a-z]p)+", "helxphelyp9", "helxphelyp")
-                  ]
+        ("car", "car", "car"),
+        ("[a-z]+", "dat9", "dat"),
+        ("([a-z]+)", "dat9", "dat"),
+        ("([a-z]+)3", "a32", "a3"),
+        ("([a-z]+)3", "3a", ""),
+        ("(hello)+", "hellohello", "hellohello"),
+        ("(hel[a-z]p)+", "helxphelyp", "helxphelyp"),
+        ("(hel[a-z]p)+", "helxphelyp9", "helxphelyp"), # erroring
+        ("(x[a-z]y)+", "xay9", "xay"),
+        ("(x[a-z]+y)*a", "xya", "a")
+    ]
     for idx, (pattern, match, expected) in enumerate(test_cases):
         pat = PatternParser(pattern)
         pat.compile()
@@ -476,10 +523,10 @@ def test0():
 def test1():
     # pattern, match, _ = ("[a-z]+", "dat9", "dat")
     # pattern, match = "([a-z]+)3", "a3"
+    # pattern, match = "(hello)+", "hellohello"
 
-    # TOOD: fixme; this is failing because the quantifier isn't being applied properly
-    # likely need to fix coalesce
-    pattern, match = "(hello)+", "hellohello"
+    pattern, match, _ = "(hel[a-z]p)+", "helxphelyp9", "helxphelyp"
+    pattern, match, _ = ("(x[a-z]+y)*a", "a", "a")
     pat = PatternParser(pattern)
     pat.compile()
     print(f'compiled pattern is {pat.compiled}')
@@ -488,5 +535,5 @@ def test1():
 
 if __name__ == '__main__':
     #test0()
-    #test1()
-    tests()
+    test1()
+    #tests()
