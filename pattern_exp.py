@@ -117,11 +117,11 @@ class Disjunction:
 
 
 class MatchResult:
-    def __init__(self, matched: bool, content: str = None, partial_match: bool = False, sufficient_consumed: bool = True):
+    def __init__(self, matched: bool, content: str = None, partial_match: bool = False):
         self.matched = matched
         self.content = content
+        # whether the user input was fully consumed
         self.partial_match = partial_match
-        self.sufficient_consumed = sufficient_consumed
 
 
 class PatternParser:
@@ -156,9 +156,9 @@ class PatternParser:
     def peek_next_next(self) -> str:
         return self.pattern[self.current + 2]
 
-    def coalesce_literals(self, arr: List[Token]) -> List[Token]:
+    def coalesce_literals(self, tokens: List[Token]) -> List[Token]:
         """
-        coalesce adjacent literal chars into literal word;
+        utility to coalesce adjacent literal chars into literal word;
         non-literal Tokens' relative ordering is untouched
 
         context: in a group, initially each char is it's own literal
@@ -167,9 +167,9 @@ class PatternParser:
         """
         coalesced = []
         partials = []
-        for idx, ele in enumerate(arr):
-            if isinstance(ele, Literal):
-                partials.append(ele)
+        for idx, token in enumerate(tokens):
+            if isinstance(token, Literal):
+                partials.append(token)
             elif len(partials) > 0:
                 # coalesce and add to result
                 value = ''.join([literal.value for literal in partials])
@@ -177,8 +177,8 @@ class PatternParser:
                 partials = []
 
             # add all other tokens as is
-            if not isinstance(ele, Literal):
-                coalesced.append(ele)
+            if not isinstance(token, Literal):
+                coalesced.append(token)
 
         if len(partials) > 0:
             value = ''.join([literal.value for literal in partials])
@@ -288,7 +288,7 @@ class PatternParser:
                 break
             else:  # ch is non-special
                 # check if it's part of a range
-                # TODO: keep a seperate list of chars to be escaped
+                # TODO: keep a separate list of chars to be escaped
                 if self.has_next() and self.peek() == '-':
                     if not self.has_next_next():
                         # unescaped dash's are only supported in range
@@ -331,16 +331,8 @@ class PatternParser:
         elif quantifier is None:
             # TODO: not sure if this correct
             return True
-            # return current_repetition >= 1
-
-    def match_literal_old(self, literal: Literal, string: str, startidx: int = 0) -> MatchResult:
-        if literal.value == string[startidx]:
-            return MatchResult(True, literal.value)
-        return MatchResult(False)
 
     def match_literal(self, literal: Literal, string: str, startidx: int = 0) -> MatchResult:
-        # I think I need to distinguish a partial match vs.
-        #
         for idx, lch in enumerate(literal.value):
             if lch != string[startidx + idx]:
                 if idx == 0:
@@ -402,16 +394,8 @@ class PatternParser:
                     assert isinstance(subgroup, Grouping), "unexpected sub-expression type"
                     # groupings can be nested
                     # so the matching algorithm must be recursive
-                    # res = None
-                    # try:
-                    # todo for *, if a child errs, should still pass
-                    # e.g. ((foo)+)* ""
+                    # todo: e.g. ((foo)+)*, even if inside (+) fails, the outside (*) should still pass
                     res = self.match_grouping(subgroup, string, sptr)
-                    # except MinMatchesNotFound:
-                        # this means the child group was unable to consume
-                        # the minimum number of consumptions
-                        # this may be okay
-                        # pass
 
                 # current component matched
                 if res.matched:
@@ -420,38 +404,19 @@ class PatternParser:
                     # increment string pointer
                     sptr += len(res.content)
 
-                    if self.sufficient_consumed(repetition, subgroup.quantifier):
-                        # thus if a new bit of pattern appears, we know we've met
-                        # the requirement and hence this is not an error
-                        subgroup_matched = True
-
                 # current component partially matched
                 elif res.partial_match:
                     matched.append(res.content)
                     sptr += len(res.content)
-                    # also increment gptr
-                    # repetition = 0
-                    # only increment, when no consumption?
-                    # but then
-                    # gptr += 1
+                    # only increment, when there is no consumption
+                    # NOTE: not entirely sure about this; document better
+
                 # current component did not match
                 else:
                     # no match, move to next matchable
-                    # do I need to check minimum match cond was violated
-
-                    if not self.sufficient_consumed(repetition, subgroup.quantifier) and subgroup_matched is False:
-                        #print('In-suff consumed')
+                    # check minimum match cond was violated
+                    if not self.sufficient_consumed(repetition, subgroup.quantifier):
                         raise MinMatchesNotFound
-                    """
-                        # this sub group does not match;
-                        # we need to break from this matching loop
-                        # if there was a partial match, pipe it through
-                        # NOTE: not entirely sure about this logic
-                        content = arr2str(matched)
-                        if res.partial_match:
-                            content += res.content
-                        return MatchResult(False, content, partial_match=True)
-                    """
 
                     repetition = 0
                     # increment component pointer
@@ -462,11 +427,6 @@ class PatternParser:
                 gptr += 1
                 repetition = 0
                 continue
-
-        # check whether min number of times consumed
-        if not self.sufficient_consumed(repetition, groupings.quantifier):
-            raise MinMatchesNotFound
-            # return MatchResult(False, arr2str(matched), partial_match=True)
 
         return MatchResult(True, arr2str(matched))
 
@@ -490,7 +450,9 @@ def tests():
                   ("([a-z]+)", "dat9", "dat"),
                   ("([a-z]+)3", "a32", "a3"),
                   ("([a-z]+)3", "3a", ""),
-                  ("(hello)+", "hellohello", "hellohello")
+                  ("(hello)+", "hellohello", "hellohello"),
+                  ("(hel[a-z]p)+", "helxphelyp", "helxphelyp"),
+                  #("(hel[a-z]p)+", "helxphelyp9", "helxphelyp")
                   ]
     for idx, (pattern, match, expected) in enumerate(test_cases):
         pat = PatternParser(pattern)
@@ -526,5 +488,5 @@ def test1():
 
 if __name__ == '__main__':
     #test0()
-    test1()
-    #tests()
+    #test1()
+    tests()
