@@ -201,14 +201,14 @@ class PatternParser:
 
         pattern can be of form:
         foo  : literal
-        [a-z]: charset
+        [a-z]: charset (range)
         [3-9]
-        [az]
+        [az] charsets (enumeration)
         fox* : single-char quantifier: *,+,?
         [3-9]{3,4}: quantity/numeric range
         (foo)*: groupings
         (foo_[a-z]*)+: groupings
-            - not sure if groups should be nestable
+
         NB: quantifiers can apply to any other element, except another quantifier
 
         special chars, namely:
@@ -357,9 +357,8 @@ class PatternParser:
     def match_grouping(self, groupings: Grouping, string: str, startidx: int = 0) -> MatchResult:
         """
         return longest match
-        if this gets too complex, it might make sense to have separate classes for
-        compiling and matching
-
+        if this gets too complex, consider moving matching logic
+        to separate class
 
         NOTES: on the matching logic:
         - the user string may be partially consumed
@@ -384,7 +383,7 @@ class PatternParser:
         matched = []
         # the last gptr location where a match was found
         # needed to determine if the pattern was fully consumed
-        last_gptr_matched = -1
+        last_matched_gptr = -1
         # whether the subgroup has matched
         while sptr < len(string) and gptr < len(groups):
 
@@ -422,7 +421,7 @@ class PatternParser:
                     matched.append(res.content)
                     # increment string pointer
                     sptr += len(res.content)
-                    last_gptr_matched = gptr
+                    last_matched_gptr = gptr
 
                     # increment the gptr; this represents
                     # something not matching with [0,...] quantifier
@@ -451,22 +450,22 @@ class PatternParser:
         # we want the pattern to be fully consumed and at least one
         # group has not been matched
         content = arr2str(matched)
-        if len(content) == 0 or last_gptr_matched < len(groups) - 1:
+        if len(content) == 0 or last_matched_gptr < len(groups) - 1:
             # this seems to be needed because it attempts partial match
             # perhaps this should be labelled better
             return MatchResult(False)
 
         return MatchResult(True, content)
 
-    def match(self, string) -> str:
+    def match(self, string: str, startidx: int = 0) -> str:
         if self.compiled is None:
             self.compile()
 
         try:
-            result = self.match_grouping(self.compiled, string)
+            result = self.match_grouping(self.compiled, string, startidx)
             return result.content
         except MinMatchesNotFound:
-            print("No match found")
+            # print("No match found")
             return ""
 
 
@@ -493,21 +492,9 @@ def tests():
             print(f'{idx+1} passed')
         else:
             print(f'{idx+1} failed pattern:{pattern}, match:{match}, expected:{expected}, actual:{result}')
-            # break
 
 
 def test0():
-    pat = PatternParser("([a-z]+)3")
-    pat.compile()
-    print(f'compiled pattern is {pat.compiled}')
-    print(pat.match("3a"))
-
-
-def test1():
-    # pattern, match, _ = ("[a-z]+", "dat9", "dat")
-    # pattern, match = "([a-z]+)3", "a3"
-    # pattern, match = "(hello)+", "hellohello"
-
     pattern, match, _ = "(hel[a-z]p)+", "helxphelyp9", "helxphelyp"
     pattern, match, _ = ("(x[a-z]+y)*a", "a", "a")
     pat = PatternParser(pattern)
@@ -518,5 +505,4 @@ def test1():
 
 if __name__ == '__main__':
     #test0()
-    #test1()
     tests()
