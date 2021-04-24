@@ -1,12 +1,37 @@
 from typing import List
 
 
+# Utilities
+
 def arr2str(arr):
     return ''.join(arr) if len(arr) > 0 else ''
 
 
-QUANTIFIERS = ['*', '+', '?']
+# Globals
 
+ESCAPABLE_CHARS = {'(', ')', '[', ']', '{', '}', '-'}
+
+
+# Exceptions
+
+
+class MinMatchesNotFound(Exception):
+    pass
+
+
+class UnescapedChar(Exception):
+    """
+    These represent the constraint that special chars be escaped
+    """
+
+
+class UnrecognizedEscapedChar(Exception):
+    """
+    This represents that random characters should not be escaped
+    """
+
+
+# Quantifier classes
 
 class Quantifier:
     pass
@@ -38,23 +63,6 @@ class UnclosedCharSet(Exception):
     pass
 
 
-class MinMatchesNotFound(Exception):
-    pass
-
-
-class PatternPartialMatch(Exception):
-    """
-    The pattern was not fully consumed
-    """
-    pass
-
-
-class UnescapedChar(Exception):
-    """
-    These represent the constraint that special chars be escaped
-    """
-
-
 class Token:
     def __init__(self, quantifier=None):
         self.quantifier = quantifier
@@ -76,7 +84,7 @@ class Literal(Token):
 
 class CharRange(Token):
     """
-    a child range in a charset
+    a child range in a charset, e.g. a-z
     """
     def __init__(self, range_start, range_end, quantifier=None):
         super().__init__(quantifier)
@@ -93,6 +101,9 @@ class CharRange(Token):
 
 
 class Charset(Token):
+    """
+    e.g. [a-z01]
+    """
     def __init__(self, matches: list, quantifier=None):
         super().__init__(quantifier)
         # matches is composed of either literals or ranges
@@ -108,6 +119,9 @@ class Charset(Token):
 
 
 class Grouping(Token):
+    """
+    e.g. (foo)
+    """
     def __init__(self, groups: list, quantifier=None):
         self.groups = groups
         super().__init__(quantifier)
@@ -118,13 +132,11 @@ class Grouping(Token):
         return f'G[{self.groups}]'
 
 
-class Disjunction:
-    def __init__(self, *elements):
-        self.elements = elements
-
-
 class MatchResult:
-    def __init__(self, matched: bool, content: str = None):
+    """
+    Result for match
+    """
+    def __init__(self, matched: bool, content: str = ''):
         self.matched = matched
         self.content = content
 
@@ -254,7 +266,7 @@ class PatternParser:
                     matchable.quantifier = ZeroOrMore()
                 elif ch == '+':
                     matchable.quantifier = OneOrMore()
-                else:  # ?
+                else:
                     assert ch == '?', "unknown quantifier"
                     matchable.quantifier = ZeroOrOne()
             elif ch == '{':
@@ -262,9 +274,23 @@ class PatternParser:
                 pass
             # handle escape char
             elif ch == '\\':
-                pass
+                next_char = self.advance()
+                if next_char not in ESCAPABLE_CHARS:
+                    # NOTE: currently not supporting all escape chars
+                    raise UnrecognizedEscapedChar
+                # add the escaped char as a literal
+                compiled.append(Literal(next_char))
+
             else:
                 compiled.append(Literal(ch))
+
+        if is_nested:
+            # this is error; since this was a nested call we should have found
+            # a closing bracket; the choice of exception is imprecise
+            # because the user's intention could be to: 1) create a group
+            # and perhaps forgot the closing bracket; or 2) a literal match
+            # on open bracket "(" and forgot to escape; for now bracket "(" must be escaped
+            raise UnescapedChar("Unclosed bracket")
 
         return Grouping(self.coalesce_literals(compiled))
 
@@ -281,7 +307,13 @@ class PatternParser:
             ch = self.advance()  # consume char
             # handle escape char
             if ch == '\\':
-                pass
+                next_char = self.advance()
+                if next_char not in ESCAPABLE_CHARS:
+                    # NOTE: currently not supporting all escape chars
+                    raise UnrecognizedEscapedChar
+                # add the escaped char as a literal
+                result.append(Literal(next_char))
+
             # handle range dash
             if ch == '-':
                 # an unescaped dash, should only appear between a range
@@ -373,7 +405,6 @@ class PatternParser:
             startidx: of string
 
             return[MatchResult].matched is True if there is a complete match; else False
-
         """
 
         groups = groupings.groups
@@ -413,7 +444,7 @@ class PatternParser:
                     if res.matched is False and isinstance(subgroup.quantifier, ZeroOrMore) or isinstance(subgroup.quantifier, ZeroOrOne):
                         res = MatchResult(True, "")
 
-                assert res is not None, "res cannot be None"
+                assert res is not None
 
                 # current component matched
                 if res.matched:
@@ -469,34 +500,12 @@ class PatternParser:
             return ""
 
 
-def tests():
-    # triples of pattern, match, expected_result
-    test_cases = [
-        ("car", "car", "car"),
-        ("[a-z]+", "dat9", "dat"),
-        ("([a-z]+)", "dat9", "dat"),
-        ("([a-z]+)3", "a32", "a3"),
-        ("([a-z]+)3", "3a", ""),
-        ("(hello)+", "hellohello", "hellohello"),
-        ("(hel[a-z]p)+", "helxphelyp", "helxphelyp"),
-        ("(hel[a-z]p)+", "helxphelyp9", "helxphelyp"), # erroring
-        ("(x[a-z]y)+", "xay9", "xay"),
-        ("(x[a-z]+y)*a", "a", "a")
-    ]
-    for idx, (pattern, match, expected) in enumerate(test_cases):
-        pat = PatternParser(pattern)
-        pat.compile()
-        result = pat.match(match)
-        # print(f'compiled pattern is {pat.compiled}')
-        if result == expected:
-            print(f'{idx+1} passed')
-        else:
-            print(f'{idx+1} failed pattern:{pattern}, match:{match}, expected:{expected}, actual:{result}')
-
-
-def test0():
+def test():
     pattern, match, _ = "(hel[a-z]p)+", "helxphelyp9", "helxphelyp"
     pattern, match, _ = ("(x[a-z]+y)*a", "a", "a")
+    pattern, match = "\(", "("
+    # specify i
+
     pat = PatternParser(pattern)
     pat.compile()
     print(f'compiled pattern is {pat.compiled}')
@@ -504,5 +513,4 @@ def test0():
 
 
 if __name__ == '__main__':
-    #test0()
-    tests()
+    test()
