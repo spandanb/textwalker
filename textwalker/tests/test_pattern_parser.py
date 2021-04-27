@@ -1,4 +1,4 @@
-from pattern_parser import PatternParser
+from textwalker import PatternParser
 
 
 def tests():
@@ -25,10 +25,10 @@ def tests():
         pat = PatternParser(pattern)
         pat.compile()
         result = pat.match(match)
-        if result == expected:
-            print(f'{idx+1} passed')
-        else:
-            print(f'{idx+1} failed pattern:{pattern}, match:{match}, expected:{expected}, actual:{result}')
+        assert result == expected, f'{idx+1} failed pattern:{pattern}, match:{match}, expected:{expected}, actual:{result}'
+#            print(f'{idx+1} passed')
+#        else:
+#            print(f'{idx+1} failed pattern:{pattern}, match:{match}, expected:{expected}, actual:{result}')
 
 
 if __name__ == '__main__':

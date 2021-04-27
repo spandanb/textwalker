@@ -1,5 +1,5 @@
 from typing import List
-from pattern_parser import PatternParser
+from .pattern_parser import PatternParser
 
 
 # commonly used charsets
