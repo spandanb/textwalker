@@ -1,6 +1,6 @@
 from typing import List
 
-from utils import arr2str
+from .utils import arr2str
 
 # Globals
 
@@ -103,7 +103,7 @@ class CharRange(Token):
 
     def __repr__(self):
         if self.quantifier is not None:
-            return f'L[{self.range_start}-{self.range_end}{self.quantifier}]'
+            return f'CR[{self.range_start}-{self.range_end}{self.quantifier}]'
         return f'CR({self.range_start}-{self.range_end})'
 
     def __str__(self):
@@ -121,7 +121,7 @@ class Charset(Token):
 
     def __repr__(self):
         if self.quantifier is not None:
-            return f'L[{self.matches}{self.quantifier}]'
+            return f'CS[{self.matches}{self.quantifier}]'
         return f'CS[{self.matches}]'
 
     def __str__(self):
@@ -196,10 +196,14 @@ class PatternParser:
         we need to coalesce literals to words so we can
         match on, e.g. word repetitions
         """
+
+        # return tokens
+
         coalesced = []
         partials = []
         for idx, token in enumerate(tokens):
-            if isinstance(token, Literal):
+            # if quantifier is not None, can't coalesce into one literal
+            if isinstance(token, Literal) and token.quantifier is None:
                 partials.append(token)
             elif len(partials) > 0:
                 # coalesce and add to result
@@ -284,7 +288,7 @@ class PatternParser:
                     assert ch == '?', "unknown quantifier"
                     matchable.quantifier = ZeroOrOne()
             elif ch == '{':
-                # this will either succeed and consume the entire quantifier
+                # this will either succeed and consume the entire quantifier or raise
                 pass
             # handle escape char
             elif ch == '\\':
@@ -339,7 +343,6 @@ class PatternParser:
                 break
             else:  # ch is non-special
                 # check if it's part of a range
-                # TODO: keep a separate list of chars to be escaped
                 if self.has_next() and self.peek() == '-':
                     if not self.has_next_next():
                         # unescaped dash's are only supported in range
