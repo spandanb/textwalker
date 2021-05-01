@@ -59,10 +59,28 @@ python3 setup.py install
 pytest
 ```
 
-## TODO
+### Steps
+generate docs: 
+cd <root>
+pdoc --html --force textwalker
+
+local install
+pip install -e .
+
+
+
+## TODO (MISC)
 - properly define the grammar supported
-- add tests
-- add   
-- add support for {}
 - add licensce
+
+## TODO (TECHNICAL)
+- add support for '{}'
+- add support for case (in)sensitive match?
+- add docs
+- cleanup docstrings
+  
+- add tests
+  -- split tests by different grammar being exercized
+- fix setup
+  -- ideally I run setup.py; and tests and examples can then just run
 
