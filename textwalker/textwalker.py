@@ -1,5 +1,5 @@
 from typing import List
-from .pattern_parser import PatternParser
+from pattern_parser import PatternParser
 
 
 # commonly used charsets
@@ -24,7 +24,6 @@ class TextWalker:
         self.textidx = 0
         # this will be consumed before and after every user specified walk
         self.word_delim = word_delim
-
 
     def walk(self, pattern: str):
         """

@@ -1,11 +1,6 @@
 from typing import List
 
-
-# Utilities
-
-def arr2str(arr):
-    return ''.join(arr) if len(arr) > 0 else ''
-
+from utils import arr2str
 
 # Globals
 
@@ -34,15 +29,24 @@ class UnrecognizedEscapedChar(Exception):
 # Quantifier classes
 
 class Quantifier:
+    """
+    base quantifier class
+    """
     pass
 
 
 class ZeroOrMore(Quantifier):
+    """
+    zero or more repetitions
+    """
     def __str__(self):
         return '*'
 
 
 class OneOrMore(Quantifier):
+    """
+    one or more repetitions
+    """
     def __str__(self):
         return '+'
 
@@ -64,11 +68,17 @@ class UnclosedCharSet(Exception):
 
 
 class Token:
+    """
+    base token type
+    """
     def __init__(self, quantifier=None):
         self.quantifier = quantifier
 
 
 class Literal(Token):
+    """
+    literal token
+    """
     def __init__(self, value, quantifier=None):
         super().__init__(quantifier)
         self.value = value
@@ -142,6 +152,9 @@ class MatchResult:
 
 
 class PatternParser:
+    """
+
+    """
     def __init__(self, pattern):
         # when parsing a chunk, `start` is the start of the chunk
         # and `current` points to the `current` char
@@ -173,7 +186,8 @@ class PatternParser:
     def peek_next_next(self) -> str:
         return self.pattern[self.current + 2]
 
-    def coalesce_literals(self, tokens: List[Token]) -> List[Token]:
+    @staticmethod
+    def coalesce_literals(tokens: List[Token]) -> List[Token]:
         """
         utility to coalesce adjacent literal chars into literal word;
         non-literal Tokens' relative ordering is untouched
@@ -341,7 +355,8 @@ class PatternParser:
 
         return Charset(result)
 
-    def can_consume(self, current_repetition, quantifier) -> bool:
+    @staticmethod
+    def can_consume(to_run_iteration: int, quantifier: Quantifier) -> bool:
         """
         true if can consume based on `current_repetition`; note this
         invoked before consuming
@@ -349,12 +364,13 @@ class PatternParser:
         if isinstance(quantifier, ZeroOrMore) or isinstance(quantifier, OneOrMore):
             return True
         elif isinstance(quantifier, ZeroOrOne):
-            return current_repetition < 1
+            return to_run_iteration < 1
         elif quantifier is None:
             # interpret None as 1
-            return current_repetition < 1
+            return to_run_iteration < 1
 
-    def sufficient_consumed(self, current_repetition, quantifier) -> bool:
+    @staticmethod
+    def sufficient_consumed(last_repetition, quantifier: Quantifier) -> bool:
         """
         return True if the minimum number of elements was consumed
         NOTE this is invoked after consuming
@@ -364,7 +380,7 @@ class PatternParser:
         elif isinstance(quantifier, ZeroOrMore):
             return True
         elif isinstance(quantifier, OneOrMore):
-            return current_repetition >= 1
+            return last_repetition >= 1
         elif quantifier is None:
             # TODO: not sure if this correct
             return True
@@ -385,6 +401,24 @@ class PatternParser:
                 if charset_member.range_start <= string[startidx] <= charset_member.range_end:
                     return MatchResult(True, string[startidx])
         return MatchResult(False)
+
+    @staticmethod
+    def check_and_update_empty(result: MatchResult, quantifier: Quantifier) -> MatchResult:
+        """
+        In some cases, a "no-match" of a sub-group is a match
+        is a match of zero, according to the grammar, e.g. if the quantifier is *, ?.
+
+        Returns:
+        If there is a no-match, and the quantifier allows zero matches,
+        then this will update the result to be an empty match;
+        In all other cases, it will return the `result`
+        """
+        # if quantifier is [0,..] and no-match, this is treated
+        # as a match of len 0;
+        if result.matched is False and isinstance(quantifier, ZeroOrMore) or isinstance(quantifier, ZeroOrOne):
+            res = MatchResult(True, "")
+        # else return original result
+        return result
 
     def match_grouping(self, groupings: Grouping, string: str, startidx: int = 0) -> MatchResult:
         """
@@ -432,19 +466,16 @@ class PatternParser:
                 res = None
                 if isinstance(subgroup, Literal):
                     res = self.match_literal(subgroup, string, sptr)
+                    res = self.check_and_update_empty(res, subgroup.quantifier)
                 elif isinstance(subgroup, Charset):
                     res = self.match_charset(subgroup, string, sptr)
+                    res = self.check_and_update_empty(res, subgroup.quantifier)
                 else:
                     assert isinstance(subgroup, Grouping), "unexpected sub-expression type"
                     # groupings can be nested
                     # so the matching algorithm must be recursive
                     res = self.match_grouping(subgroup, string, sptr)
-                    # if quantifier is [0,..] and no-match, this is treated
-                    # as a match of len 0;
-                    if res.matched is False and isinstance(subgroup.quantifier, ZeroOrMore) or isinstance(subgroup.quantifier, ZeroOrOne):
-                        res = MatchResult(True, "")
-
-                assert res is not None
+                    res = self.check_and_update_empty(res, subgroup.quantifier)
 
                 # current component matched
                 if res.matched:
@@ -503,7 +534,8 @@ class PatternParser:
 def test():
     pattern, match, _ = "(hel[a-z]p)+", "helxphelyp9", "helxphelyp"
     pattern, match, _ = ("(x[a-z]+y)*a", "a", "a")
-    pattern, match = "\(", "("
+    pattern, match = "\\(", "("
+    pattern, match, _ = ("((a*b)+)", "bcard", "b"),
     # specify i
 
     pat = PatternParser(pattern)
