@@ -13,7 +13,9 @@ class TextWalker:
     consumes words one word at a time
     """
 
-    def __init__(self, text: str, word_delim=NEWLINE_WHITESPACE, strict_match: bool = False):
+    def __init__(
+        self, text: str, word_delim=NEWLINE_WHITESPACE, strict_match: bool = False
+    ):
         """
         args:
             text: input text to walk
@@ -43,8 +45,8 @@ class TextWalker:
         pparser = PatternParser(pattern)
         match = pparser.match(self.text, self.textidx)
         if match is None:
-            print('text walker did not find match')
-            return ''
+            print("text walker did not find match")
+            return ""
         self.textidx += len(match)
         return match
 
@@ -66,9 +68,9 @@ class TextWalker:
             # will consume until there is a match
             match = pparser.match(self.text, self.textidx)
             if len(match) > 0:
-                return self.text[startidx: self.textidx], match
+                return self.text[startidx : self.textidx], match
             self.textidx += 1
-        return self.text[startidx:], ''
+        return self.text[startidx:], ""
 
     def walk_many(self, patterns: List[str]) -> List[str]:
         """

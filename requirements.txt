@@ -1,4 +1,5 @@
-black==20.8b1
+black==24.4b2
+doit==0.33.1
 flake8==3.8.4
 mypy==0.790
 pdoc==0.9.3

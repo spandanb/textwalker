@@ -4,13 +4,17 @@ from .utils import arr2str
 
 # Globals
 
-ESCAPABLE_CHARS = {'(', ')', '[', ']', '{', '}', '-'}
+ESCAPABLE_CHARS = {"(", ")", "[", "]", "{", "}", "-"}
 
 
 # Exceptions
 
 
 class MinMatchesNotFound(Exception):
+    """
+    The minimum number of matches specified by the quantifier is not matched
+    """
+
     pass
 
 
@@ -28,10 +32,12 @@ class UnrecognizedEscapedChar(Exception):
 
 # Quantifier classes
 
+
 class Quantifier:
     """
     base quantifier class
     """
+
     pass
 
 
@@ -39,16 +45,18 @@ class ZeroOrMore(Quantifier):
     """
     zero or more repetitions
     """
+
     def __str__(self):
-        return '*'
+        return "*"
 
 
 class OneOrMore(Quantifier):
     """
     one or more repetitions
     """
+
     def __str__(self):
-        return '+'
+        return "+"
 
     def __repr__(self):
         return str(self)
@@ -56,7 +64,7 @@ class OneOrMore(Quantifier):
 
 class ZeroOrOne(Quantifier):
     def __str__(self):
-        return '?'
+        return "?"
 
 
 class UnescapedDash(Exception):
@@ -71,6 +79,7 @@ class Token:
     """
     base token type
     """
+
     def __init__(self, quantifier=None):
         self.quantifier = quantifier
 
@@ -79,14 +88,15 @@ class Literal(Token):
     """
     literal token
     """
+
     def __init__(self, value, quantifier=None):
         super().__init__(quantifier)
         self.value = value
 
     def __repr__(self):
         if self.quantifier is not None:
-            return f'L[{self.value}{self.quantifier}]'
-        return f'L[{self.value}]'
+            return f"L[{self.value}{self.quantifier}]"
+        return f"L[{self.value}]"
 
     def __str__(self):
         return self.__repr__()
@@ -96,6 +106,7 @@ class CharRange(Token):
     """
     a child range in a charset, e.g. a-z
     """
+
     def __init__(self, range_start, range_end, quantifier=None):
         super().__init__(quantifier)
         self.range_start = range_start
@@ -103,8 +114,8 @@ class CharRange(Token):
 
     def __repr__(self):
         if self.quantifier is not None:
-            return f'CR[{self.range_start}-{self.range_end}{self.quantifier}]'
-        return f'CR({self.range_start}-{self.range_end})'
+            return f"CR[{self.range_start}-{self.range_end}{self.quantifier}]"
+        return f"CR({self.range_start}-{self.range_end})"
 
     def __str__(self):
         return self.__repr__()
@@ -114,6 +125,7 @@ class Charset(Token):
     """
     e.g. [a-z01]
     """
+
     def __init__(self, matches: list, quantifier=None):
         super().__init__(quantifier)
         # matches is composed of either literals or ranges
@@ -121,8 +133,8 @@ class Charset(Token):
 
     def __repr__(self):
         if self.quantifier is not None:
-            return f'CS[{self.matches}{self.quantifier}]'
-        return f'CS[{self.matches}]'
+            return f"CS[{self.matches}{self.quantifier}]"
+        return f"CS[{self.matches}]"
 
     def __str__(self):
         return self.__repr__()
@@ -132,29 +144,30 @@ class Grouping(Token):
     """
     e.g. (foo)
     """
+
     def __init__(self, groups: list, quantifier=None):
         self.groups = groups
         super().__init__(quantifier)
 
     def __repr__(self):
         if self.quantifier is not None:
-            return f'G[{self.groups}{self.quantifier}]'
-        return f'G[{self.groups}]'
+            return f"G[{self.groups}{self.quantifier}]"
+        return f"G[{self.groups}]"
 
 
 class MatchResult:
     """
     Result for match
     """
-    def __init__(self, matched: bool, content: str = ''):
+
+    def __init__(self, matched: bool, content: str = ""):
         self.matched = matched
         self.content = content
 
 
 class PatternParser:
-    """
+    """ """
 
-    """
     def __init__(self, pattern):
         # when parsing a chunk, `start` is the start of the chunk
         # and `current` points to the `current` char
@@ -207,7 +220,7 @@ class PatternParser:
                 partials.append(token)
             elif len(partials) > 0:
                 # coalesce and add to result
-                value = ''.join([literal.value for literal in partials])
+                value = "".join([literal.value for literal in partials])
                 coalesced.append(Literal(value))
                 partials = []
 
@@ -216,7 +229,7 @@ class PatternParser:
                 coalesced.append(token)
 
         if len(partials) > 0:
-            value = ''.join([literal.value for literal in partials])
+            value = "".join([literal.value for literal in partials])
             coalesced.append(Literal(value))
         return coalesced
 
@@ -259,39 +272,38 @@ class PatternParser:
         compiled = []
         while self.is_at_end() is False:
             ch = self.advance()
-            if ch == '(':
+            if ch == "(":
                 # handle grouping
                 grouping = self.compile_grouping(is_nested=True)
                 compiled.append(grouping)
-            elif ch == ')':
+            elif ch == ")":
                 if is_nested:
                     # this terminates the grouping
                     return Grouping(self.coalesce_literals(compiled))
                 raise UnescapedChar(")")
-            elif ch == '[':
+            elif ch == "[":
                 # this will either succeed and consume and return
                 # entire charset, or raise exception
                 charset = self.compile_charset()
                 compiled.append(charset)
             # handle quantifiers
-            elif ch == '*' or ch == '+' or ch == '?':
+            elif ch == "*" or ch == "+" or ch == "?":
                 # find matchable to attach quantifier to
                 matchable = compiled[-1] if len(compiled) > 0 else None
                 if matchable is None:
                     raise UnescapedChar
-                quantifier = None
-                if ch == '*':
+                if ch == "*":
                     matchable.quantifier = ZeroOrMore()
-                elif ch == '+':
+                elif ch == "+":
                     matchable.quantifier = OneOrMore()
                 else:
-                    assert ch == '?', "unknown quantifier"
+                    assert ch == "?", "unknown quantifier"
                     matchable.quantifier = ZeroOrOne()
-            elif ch == '{':
+            elif ch == "{":
                 # this will either succeed and consume the entire quantifier or raise
                 pass
             # handle escape char
-            elif ch == '\\':
+            elif ch == "\\":
                 next_char = self.advance()
                 if next_char not in ESCAPABLE_CHARS:
                     # NOTE: currently not supporting all escape chars
@@ -324,7 +336,7 @@ class PatternParser:
         while self.is_at_end() is False:
             ch = self.advance()  # consume char
             # handle escape char
-            if ch == '\\':
+            if ch == "\\":
                 next_char = self.advance()
                 if next_char not in ESCAPABLE_CHARS:
                     # NOTE: currently not supporting all escape chars
@@ -333,17 +345,17 @@ class PatternParser:
                 result.append(Literal(next_char))
 
             # handle range dash
-            if ch == '-':
+            if ch == "-":
                 # an unescaped dash, should only appear between a range
                 # this simplifies the case, where it's the first or last char in set
                 raise UnescapedDash
-            if ch == ']':
+            if ch == "]":
                 # closing bracket found
                 closed = True
                 break
             else:  # ch is non-special
                 # check if it's part of a range
-                if self.has_next() and self.peek() == '-':
+                if self.has_next() and self.peek() == "-":
                     if not self.has_next_next():
                         # unescaped dash's are only supported in range
                         raise UnescapedDash
@@ -388,25 +400,37 @@ class PatternParser:
             # TODO: not sure if this correct
             return True
 
-    def match_literal(self, literal: Literal, string: str, startidx: int = 0) -> MatchResult:
+    def match_literal(
+        self, literal: Literal, string: str, startidx: int = 0
+    ) -> MatchResult:
         for idx, lch in enumerate(literal.value):
+            if startidx + idx == len(string):
+                return MatchResult(False)
             if lch != string[startidx + idx]:
                 return MatchResult(False)
         return MatchResult(True, literal.value)
 
-    def match_charset(self, charset: Charset, string: str, startidx: int = 0) -> MatchResult:
+    def match_charset(
+        self, charset: Charset, string: str, startidx: int = 0
+    ) -> MatchResult:
         for charset_member in charset.matches:
             if isinstance(charset_member, Literal):
                 if charset_member.value == string[startidx]:
                     return MatchResult(True, string[startidx])
             elif isinstance(charset_member, CharRange):
                 # not sure if this comparison will always work
-                if charset_member.range_start <= string[startidx] <= charset_member.range_end:
+                if (
+                    charset_member.range_start
+                    <= string[startidx]
+                    <= charset_member.range_end
+                ):
                     return MatchResult(True, string[startidx])
         return MatchResult(False)
 
     @staticmethod
-    def check_and_update_empty(result: MatchResult, quantifier: Quantifier) -> MatchResult:
+    def check_and_update_empty(
+        result: MatchResult, quantifier: Quantifier
+    ) -> MatchResult:
         """
         In some cases, a "no-match" of a sub-group is a match
         is a match of zero, according to the grammar, e.g. if the quantifier is *, ?.
@@ -418,12 +442,18 @@ class PatternParser:
         """
         # if quantifier is [0,..] and no-match, this is treated
         # as a match of len 0;
-        if result.matched is False and isinstance(quantifier, ZeroOrMore) or isinstance(quantifier, ZeroOrOne):
-            res = MatchResult(True, "")
+        if (
+            result.matched is False
+            and isinstance(quantifier, ZeroOrMore)
+            or isinstance(quantifier, ZeroOrOne)
+        ):
+            result = MatchResult(True, "")
         # else return original result
         return result
 
-    def match_grouping(self, groupings: Grouping, string: str, startidx: int = 0) -> MatchResult:
+    def match_grouping(
+        self, groupings: Grouping, string: str, startidx: int = 0
+    ) -> MatchResult:
         """
         return longest match
         if this gets too complex, consider moving matching logic
@@ -447,7 +477,7 @@ class PatternParser:
         groups = groupings.groups
         gptr = 0  # sub group ptr
         sptr = startidx  # string ptr
-        repetition = 0
+        repetition = 0  # count of repetitions of current sub group
         matched = []
         # the last gptr location where a match was found
         # needed to determine if the pattern was fully consumed
@@ -474,7 +504,9 @@ class PatternParser:
                     res = self.match_charset(subgroup, string, sptr)
                     res = self.check_and_update_empty(res, subgroup.quantifier)
                 else:
-                    assert isinstance(subgroup, Grouping), "unexpected sub-expression type"
+                    assert isinstance(
+                        subgroup, Grouping
+                    ), "unexpected sub-expression type"
                     # groupings can be nested
                     # so the matching algorithm must be recursive
                     res = self.match_grouping(subgroup, string, sptr)
@@ -523,29 +555,38 @@ class PatternParser:
         return MatchResult(True, content)
 
     def match(self, string: str, startidx: int = 0) -> str:
-        if self.compiled is None:
-            self.compile()
-
+        """
+        Attempt to match `string` starting at `startidx`
+        Args:
+            string: string to match
+            startidx: location to start search
+        Return
+            None: no-match
+            str: match (could be zero length)
+        """
+        matched = None
         try:
             result = self.match_grouping(self.compiled, string, startidx)
-            return result.content
+            if result.matched:
+                matched = result.content
         except MinMatchesNotFound:
-            # print("No match found")
-            return ""
+            pass
+
+        return matched
 
 
 def test():
     pattern, match, _ = "(hel[a-z]p)+", "helxphelyp9", "helxphelyp"
     pattern, match, _ = ("(x[a-z]+y)*a", "a", "a")
     pattern, match = "\\(", "("
-    pattern, match, _ = ("((a*b)+)", "bcard", "b"),
+    pattern, match, _ = (("((a*b)+)", "bcard", "b"),)
     # specify i
 
     pat = PatternParser(pattern)
     pat.compile()
-    print(f'compiled pattern is {pat.compiled}')
+    print(f"compiled pattern is {pat.compiled}")
     print(pat.match(match))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()
