@@ -1,0 +1,2177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>textwalker.pattern_parser API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>textwalker.pattern_parser</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from typing import List
+
+from .utils import arr2str
+
+# Globals
+
+ESCAPABLE_CHARS = {&#34;(&#34;, &#34;)&#34;, &#34;[&#34;, &#34;]&#34;, &#34;{&#34;, &#34;}&#34;, &#34;-&#34;}
+
+
+# Exceptions
+
+
+class MinMatchesNotFound(Exception):
+    &#34;&#34;&#34;
+    The minimum number of matches specified by the quantifier is not matched
+    &#34;&#34;&#34;
+
+    pass
+
+
+class UnescapedChar(Exception):
+    &#34;&#34;&#34;
+    These represent the constraint that special chars be escaped
+    &#34;&#34;&#34;
+
+
+class UnrecognizedEscapedChar(Exception):
+    &#34;&#34;&#34;
+    This represents that random characters should not be escaped
+    &#34;&#34;&#34;
+
+
+# Quantifier classes
+
+
+class Quantifier:
+    &#34;&#34;&#34;
+    base quantifier class
+    &#34;&#34;&#34;
+
+    pass
+
+
+class ZeroOrMore(Quantifier):
+    &#34;&#34;&#34;
+    zero or more repetitions
+    &#34;&#34;&#34;
+
+    def __str__(self):
+        return &#34;*&#34;
+
+
+class OneOrMore(Quantifier):
+    &#34;&#34;&#34;
+    one or more repetitions
+    &#34;&#34;&#34;
+
+    def __str__(self):
+        return &#34;+&#34;
+
+    def __repr__(self):
+        return str(self)
+
+
+class ZeroOrOne(Quantifier):
+    def __str__(self):
+        return &#34;?&#34;
+
+
+class UnescapedDash(Exception):
+    pass
+
+
+class UnclosedCharSet(Exception):
+    pass
+
+
+class Token:
+    &#34;&#34;&#34;
+    base token type
+    &#34;&#34;&#34;
+
+    def __init__(self, quantifier=None):
+        self.quantifier = quantifier
+
+
+class Literal(Token):
+    &#34;&#34;&#34;
+    literal token
+    &#34;&#34;&#34;
+
+    def __init__(self, value, quantifier=None):
+        super().__init__(quantifier)
+        self.value = value
+
+    def __repr__(self):
+        if self.quantifier is not None:
+            return f&#34;L[{self.value}{self.quantifier}]&#34;
+        return f&#34;L[{self.value}]&#34;
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class CharRange(Token):
+    &#34;&#34;&#34;
+    a child range in a charset, e.g. a-z
+    &#34;&#34;&#34;
+
+    def __init__(self, range_start, range_end, quantifier=None):
+        super().__init__(quantifier)
+        self.range_start = range_start
+        self.range_end = range_end
+
+    def __repr__(self):
+        if self.quantifier is not None:
+            return f&#34;CR[{self.range_start}-{self.range_end}{self.quantifier}]&#34;
+        return f&#34;CR({self.range_start}-{self.range_end})&#34;
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class Charset(Token):
+    &#34;&#34;&#34;
+    e.g. [a-z01]
+    &#34;&#34;&#34;
+
+    def __init__(self, matches: list, quantifier=None):
+        super().__init__(quantifier)
+        # matches is composed of either literals or ranges
+        self.matches = matches
+
+    def __repr__(self):
+        if self.quantifier is not None:
+            return f&#34;CS[{self.matches}{self.quantifier}]&#34;
+        return f&#34;CS[{self.matches}]&#34;
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class Grouping(Token):
+    &#34;&#34;&#34;
+    e.g. (foo)
+    &#34;&#34;&#34;
+
+    def __init__(self, groups: list, quantifier=None):
+        self.groups = groups
+        super().__init__(quantifier)
+
+    def __repr__(self):
+        if self.quantifier is not None:
+            return f&#34;G[{self.groups}{self.quantifier}]&#34;
+        return f&#34;G[{self.groups}]&#34;
+
+
+class MatchResult:
+    &#34;&#34;&#34;
+    Result for match
+    &#34;&#34;&#34;
+
+    def __init__(self, matched: bool, content: str = &#34;&#34;):
+        self.matched = matched
+        self.content = content
+
+
+class PatternParser:
+    &#34;&#34;&#34; &#34;&#34;&#34;
+
+    def __init__(self, pattern):
+        # when parsing a chunk, `start` is the start of the chunk
+        # and `current` points to the `current` char
+        self.start = 0
+        self.current = 0
+        self.pattern = pattern
+        self.compiled = None
+
+    def is_at_end(self) -&gt; bool:
+        return self.current &gt;= len(self.pattern)
+
+    def advance(self) -&gt; str:
+        char = self.pattern[self.current]
+        self.current += 1
+        return char
+
+    def has_next(self) -&gt; bool:
+        return self.current &lt; len(self.pattern) - 1
+
+    def has_next_next(self) -&gt; bool:
+        return self.current &lt; len(self.pattern) - 2
+
+    def peek(self) -&gt; str:
+        return self.pattern[self.current]
+
+    def peek_next(self) -&gt; str:
+        return self.pattern[self.current + 1]
+
+    def peek_next_next(self) -&gt; str:
+        return self.pattern[self.current + 2]
+
+    @staticmethod
+    def coalesce_literals(tokens: List[Token]) -&gt; List[Token]:
+        &#34;&#34;&#34;
+        utility to coalesce adjacent literal chars into literal word;
+        non-literal Tokens&#39; relative ordering is untouched
+
+        context: in a group, initially each char is it&#39;s own literal
+        we need to coalesce literals to words so we can
+        match on, e.g. word repetitions
+        &#34;&#34;&#34;
+
+        # return tokens
+
+        coalesced = []
+        partials = []
+        for idx, token in enumerate(tokens):
+            # if quantifier is not None, can&#39;t coalesce into one literal
+            if isinstance(token, Literal) and token.quantifier is None:
+                partials.append(token)
+            elif len(partials) &gt; 0:
+                # coalesce and add to result
+                value = &#34;&#34;.join([literal.value for literal in partials])
+                coalesced.append(Literal(value))
+                partials = []
+
+            # add all other tokens as is
+            if not isinstance(token, Literal):
+                coalesced.append(token)
+
+        if len(partials) &gt; 0:
+            value = &#34;&#34;.join([literal.value for literal in partials])
+            coalesced.append(Literal(value))
+        return coalesced
+
+    def compile(self):
+        self.compiled = self.compile_grouping()
+
+    def compile_grouping(self, is_nested=False) -&gt; Grouping:
+        &#34;&#34;&#34;
+        compile the pattern.
+        args:
+            is_nested: whether this is nested call, i.e. grouping
+
+        pattern can be of form:
+        foo  : literal
+        [a-z]: charset (range)
+        [3-9]
+        [az] charsets (enumeration)
+        fox* : single-char quantifier: *,+,?
+        [3-9]{3,4}: quantity/numeric range
+        (foo)*: groupings
+        (foo_[a-z]*)+: groupings
+
+        NB: quantifiers can apply to any other element, except another quantifier
+
+        special chars, namely:
+            -, {, }, [, ], *, +, ?, (, ) must be escaped
+
+        escape via backslash prepended to char
+
+        An unescaped special char is an error
+
+
+        _[a-z]{1,2} i.e. can contain:
+        (foo_){1,2}
+        foo_*
+            literals: foo_
+            character sets, which can contain ranges, or specific chars: [a-z][xyz]
+            quantifier on character sets: [a-z]*
+        &#34;&#34;&#34;
+        compiled = []
+        while self.is_at_end() is False:
+            ch = self.advance()
+            if ch == &#34;(&#34;:
+                # handle grouping
+                grouping = self.compile_grouping(is_nested=True)
+                compiled.append(grouping)
+            elif ch == &#34;)&#34;:
+                if is_nested:
+                    # this terminates the grouping
+                    return Grouping(self.coalesce_literals(compiled))
+                raise UnescapedChar(&#34;)&#34;)
+            elif ch == &#34;[&#34;:
+                # this will either succeed and consume and return
+                # entire charset, or raise exception
+                charset = self.compile_charset()
+                compiled.append(charset)
+            # handle quantifiers
+            elif ch == &#34;*&#34; or ch == &#34;+&#34; or ch == &#34;?&#34;:
+                # find matchable to attach quantifier to
+                matchable = compiled[-1] if len(compiled) &gt; 0 else None
+                if matchable is None:
+                    raise UnescapedChar
+                if ch == &#34;*&#34;:
+                    matchable.quantifier = ZeroOrMore()
+                elif ch == &#34;+&#34;:
+                    matchable.quantifier = OneOrMore()
+                else:
+                    assert ch == &#34;?&#34;, &#34;unknown quantifier&#34;
+                    matchable.quantifier = ZeroOrOne()
+            elif ch == &#34;{&#34;:
+                # this will either succeed and consume the entire quantifier or raise
+                pass
+            # handle escape char
+            elif ch == &#34;\\&#34;:
+                next_char = self.advance()
+                if next_char not in ESCAPABLE_CHARS:
+                    # NOTE: currently not supporting all escape chars
+                    raise UnrecognizedEscapedChar
+                # add the escaped char as a literal
+                compiled.append(Literal(next_char))
+
+            else:
+                compiled.append(Literal(ch))
+
+        if is_nested:
+            # this is error; since this was a nested call we should have found
+            # a closing bracket; the choice of exception is imprecise
+            # because the user&#39;s intention could be to: 1) create a group
+            # and perhaps forgot the closing bracket; or 2) a literal match
+            # on open bracket &#34;(&#34; and forgot to escape; for now bracket &#34;(&#34; must be escaped
+            raise UnescapedChar(&#34;Unclosed bracket&#34;)
+
+        return Grouping(self.coalesce_literals(compiled))
+
+    def compile_charset(self) -&gt; Charset:
+        &#34;&#34;&#34;
+        should consume entire charset, i.e. should be invoked with pattern[current] == &#39;[&#39;
+        and should return &#39;[...]&#39;
+
+        raises on unclosedSet and unescapedDash
+        &#34;&#34;&#34;
+        result = []
+        closed = False
+        while self.is_at_end() is False:
+            ch = self.advance()  # consume char
+            # handle escape char
+            if ch == &#34;\\&#34;:
+                next_char = self.advance()
+                if next_char not in ESCAPABLE_CHARS:
+                    # NOTE: currently not supporting all escape chars
+                    raise UnrecognizedEscapedChar
+                # add the escaped char as a literal
+                result.append(Literal(next_char))
+
+            # handle range dash
+            if ch == &#34;-&#34;:
+                # an unescaped dash, should only appear between a range
+                # this simplifies the case, where it&#39;s the first or last char in set
+                raise UnescapedDash
+            if ch == &#34;]&#34;:
+                # closing bracket found
+                closed = True
+                break
+            else:  # ch is non-special
+                # check if it&#39;s part of a range
+                if self.has_next() and self.peek() == &#34;-&#34;:
+                    if not self.has_next_next():
+                        # unescaped dash&#39;s are only supported in range
+                        raise UnescapedDash
+                    self.advance()  # consume the dash
+                    rng_end = self.advance()
+                    rng = CharRange(ch, rng_end)
+                    result.append(rng)
+                else:  # handle literal
+                    result.append(Literal(ch))
+        if not closed:
+            raise UnclosedCharSet
+
+        return Charset(result)
+
+    @staticmethod
+    def can_consume(to_run_iteration: int, quantifier: Quantifier) -&gt; bool:
+        &#34;&#34;&#34;
+        true if can consume based on `current_repetition`; note this
+        invoked before consuming
+        &#34;&#34;&#34;
+        if isinstance(quantifier, ZeroOrMore) or isinstance(quantifier, OneOrMore):
+            return True
+        elif isinstance(quantifier, ZeroOrOne):
+            return to_run_iteration &lt; 1
+        elif quantifier is None:
+            # interpret None as 1
+            return to_run_iteration &lt; 1
+
+    @staticmethod
+    def sufficient_consumed(last_repetition, quantifier: Quantifier) -&gt; bool:
+        &#34;&#34;&#34;
+        return True if the minimum number of elements was consumed
+        NOTE this is invoked after consuming
+        &#34;&#34;&#34;
+        if isinstance(quantifier, ZeroOrOne):
+            return True
+        elif isinstance(quantifier, ZeroOrMore):
+            return True
+        elif isinstance(quantifier, OneOrMore):
+            return last_repetition &gt;= 1
+        elif quantifier is None:
+            # TODO: not sure if this correct
+            return True
+
+    def match_literal(
+        self, literal: Literal, string: str, startidx: int = 0
+    ) -&gt; MatchResult:
+        for idx, lch in enumerate(literal.value):
+            if startidx + idx == len(string):
+                return MatchResult(False)
+            if lch != string[startidx + idx]:
+                return MatchResult(False)
+        return MatchResult(True, literal.value)
+
+    def match_charset(
+        self, charset: Charset, string: str, startidx: int = 0
+    ) -&gt; MatchResult:
+        for charset_member in charset.matches:
+            if isinstance(charset_member, Literal):
+                if charset_member.value == string[startidx]:
+                    return MatchResult(True, string[startidx])
+            elif isinstance(charset_member, CharRange):
+                # not sure if this comparison will always work
+                if (
+                    charset_member.range_start
+                    &lt;= string[startidx]
+                    &lt;= charset_member.range_end
+                ):
+                    return MatchResult(True, string[startidx])
+        return MatchResult(False)
+
+    @staticmethod
+    def check_and_update_empty(
+        result: MatchResult, quantifier: Quantifier
+    ) -&gt; MatchResult:
+        &#34;&#34;&#34;
+        In some cases, a &#34;no-match&#34; of a sub-group is a match
+        is a match of zero, according to the grammar, e.g. if the quantifier is *, ?.
+
+        Returns:
+        If there is a no-match, and the quantifier allows zero matches,
+        then this will update the result to be an empty match;
+        In all other cases, it will return the `result`
+        &#34;&#34;&#34;
+        # if quantifier is [0,..] and no-match, this is treated
+        # as a match of len 0;
+        if (
+            result.matched is False
+            and isinstance(quantifier, ZeroOrMore)
+            or isinstance(quantifier, ZeroOrOne)
+        ):
+            result = MatchResult(True, &#34;&#34;)
+        # else return original result
+        return result
+
+    def match_grouping(
+        self, groupings: Grouping, string: str, startidx: int = 0
+    ) -&gt; MatchResult:
+        &#34;&#34;&#34;
+        return longest match
+        if this gets too complex, consider moving matching logic
+        to separate class
+
+        NOTES: on the matching logic:
+        - the user string may be partially consumed
+        - but generally, the pattern must be fully consumed
+
+        args:
+            # a better name might be consume_full_pattern
+            match_partial: if True, will return if pattern partially matches;
+                else raises Exception
+                user string partially matching is never an error
+
+            startidx: of string
+
+            return[MatchResult].matched is True if there is a complete match; else False
+        &#34;&#34;&#34;
+
+        groups = groupings.groups
+        gptr = 0  # sub group ptr
+        sptr = startidx  # string ptr
+        repetition = 0  # count of repetitions of current sub group
+        matched = []
+        # the last gptr location where a match was found
+        # needed to determine if the pattern was fully consumed
+        last_matched_gptr = -1
+        # whether the subgroup has matched
+        while sptr &lt; len(string) and gptr &lt; len(groups):
+
+            # there are 2 things to check:
+            # 1) is there a match
+            # 2) is the number of repetitions of match as expected
+
+            # consume as much of string (maximum munch) using subgroup
+            subgroup = groups[gptr]
+
+            # does the quantifier on this subgroup, allow it to consume more chars
+            if self.can_consume(repetition, subgroup.quantifier):
+
+                # invoke the right handler
+                res = None
+                if isinstance(subgroup, Literal):
+                    res = self.match_literal(subgroup, string, sptr)
+                    res = self.check_and_update_empty(res, subgroup.quantifier)
+                elif isinstance(subgroup, Charset):
+                    res = self.match_charset(subgroup, string, sptr)
+                    res = self.check_and_update_empty(res, subgroup.quantifier)
+                else:
+                    assert isinstance(
+                        subgroup, Grouping
+                    ), &#34;unexpected sub-expression type&#34;
+                    # groupings can be nested
+                    # so the matching algorithm must be recursive
+                    res = self.match_grouping(subgroup, string, sptr)
+                    res = self.check_and_update_empty(res, subgroup.quantifier)
+
+                # current component matched
+                if res.matched:
+                    repetition += 1
+                    matched.append(res.content)
+                    # increment string pointer
+                    sptr += len(res.content)
+                    last_matched_gptr = gptr
+
+                    # increment the gptr; this represents
+                    # something not matching with [0,...] quantifier
+                    # we treat this as-a 0len match
+                    if len(res.content) == 0:
+                        gptr += 1
+                        repetition = 0
+
+                # current component did not match
+                else:
+                    # no match, move to next matchable
+                    # check minimum match cond was violated
+                    if not self.sufficient_consumed(repetition, subgroup.quantifier):
+                        raise MinMatchesNotFound
+
+                    repetition = 0
+                    # increment component pointer
+                    gptr += 1
+            else:
+                # quantifier restricts further consume
+                # consider next subgroup
+                gptr += 1
+                repetition = 0
+                continue
+
+        # we want the pattern to be fully consumed and at least one
+        # group has not been matched
+        content = arr2str(matched)
+        if len(content) == 0 or last_matched_gptr &lt; len(groups) - 1:
+            # this seems to be needed because it attempts partial match
+            # perhaps this should be labelled better
+            return MatchResult(False)
+
+        return MatchResult(True, content)
+
+    def match(self, string: str, startidx: int = 0) -&gt; str:
+        &#34;&#34;&#34;
+        Attempt to match `string` starting at `startidx`
+        Args:
+            string: string to match
+            startidx: location to start search
+        Return
+            None: no-match
+            str: match (could be zero length)
+        &#34;&#34;&#34;
+        matched = None
+        try:
+            result = self.match_grouping(self.compiled, string, startidx)
+            if result.matched:
+                matched = result.content
+        except MinMatchesNotFound:
+            pass
+
+        return matched
+
+
+def test():
+    pattern, match, _ = &#34;(hel[a-z]p)+&#34;, &#34;helxphelyp9&#34;, &#34;helxphelyp&#34;
+    pattern, match, _ = (&#34;(x[a-z]+y)*a&#34;, &#34;a&#34;, &#34;a&#34;)
+    pattern, match = &#34;\\(&#34;, &#34;(&#34;
+    pattern, match, _ = ((&#34;((a*b)+)&#34;, &#34;bcard&#34;, &#34;b&#34;),)
+    # specify i
+
+    pat = PatternParser(pattern)
+    pat.compile()
+    print(f&#34;compiled pattern is {pat.compiled}&#34;)
+    print(pat.match(match))
+
+
+if __name__ == &#34;__main__&#34;:
+    test()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="textwalker.pattern_parser.test"><code class="name flex">
+<span>def <span class="ident">test</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test():
+    pattern, match, _ = &#34;(hel[a-z]p)+&#34;, &#34;helxphelyp9&#34;, &#34;helxphelyp&#34;
+    pattern, match, _ = (&#34;(x[a-z]+y)*a&#34;, &#34;a&#34;, &#34;a&#34;)
+    pattern, match = &#34;\\(&#34;, &#34;(&#34;
+    pattern, match, _ = ((&#34;((a*b)+)&#34;, &#34;bcard&#34;, &#34;b&#34;),)
+    # specify i
+
+    pat = PatternParser(pattern)
+    pat.compile()
+    print(f&#34;compiled pattern is {pat.compiled}&#34;)
+    print(pat.match(match))</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="textwalker.pattern_parser.CharRange"><code class="flex name class">
+<span>class <span class="ident">CharRange</span></span>
+<span>(</span><span>range_start, range_end, quantifier=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>a child range in a charset, e.g. a-z</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CharRange(Token):
+    &#34;&#34;&#34;
+    a child range in a charset, e.g. a-z
+    &#34;&#34;&#34;
+
+    def __init__(self, range_start, range_end, quantifier=None):
+        super().__init__(quantifier)
+        self.range_start = range_start
+        self.range_end = range_end
+
+    def __repr__(self):
+        if self.quantifier is not None:
+            return f&#34;CR[{self.range_start}-{self.range_end}{self.quantifier}]&#34;
+        return f&#34;CR({self.range_start}-{self.range_end})&#34;
+
+    def __str__(self):
+        return self.__repr__()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="textwalker.pattern_parser.Token" href="#textwalker.pattern_parser.Token">Token</a></li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.Charset"><code class="flex name class">
+<span>class <span class="ident">Charset</span></span>
+<span>(</span><span>matches: list, quantifier=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>e.g. [a-z01]</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Charset(Token):
+    &#34;&#34;&#34;
+    e.g. [a-z01]
+    &#34;&#34;&#34;
+
+    def __init__(self, matches: list, quantifier=None):
+        super().__init__(quantifier)
+        # matches is composed of either literals or ranges
+        self.matches = matches
+
+    def __repr__(self):
+        if self.quantifier is not None:
+            return f&#34;CS[{self.matches}{self.quantifier}]&#34;
+        return f&#34;CS[{self.matches}]&#34;
+
+    def __str__(self):
+        return self.__repr__()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="textwalker.pattern_parser.Token" href="#textwalker.pattern_parser.Token">Token</a></li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.Grouping"><code class="flex name class">
+<span>class <span class="ident">Grouping</span></span>
+<span>(</span><span>groups: list, quantifier=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>e.g. (foo)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Grouping(Token):
+    &#34;&#34;&#34;
+    e.g. (foo)
+    &#34;&#34;&#34;
+
+    def __init__(self, groups: list, quantifier=None):
+        self.groups = groups
+        super().__init__(quantifier)
+
+    def __repr__(self):
+        if self.quantifier is not None:
+            return f&#34;G[{self.groups}{self.quantifier}]&#34;
+        return f&#34;G[{self.groups}]&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="textwalker.pattern_parser.Token" href="#textwalker.pattern_parser.Token">Token</a></li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.Literal"><code class="flex name class">
+<span>class <span class="ident">Literal</span></span>
+<span>(</span><span>value, quantifier=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>literal token</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Literal(Token):
+    &#34;&#34;&#34;
+    literal token
+    &#34;&#34;&#34;
+
+    def __init__(self, value, quantifier=None):
+        super().__init__(quantifier)
+        self.value = value
+
+    def __repr__(self):
+        if self.quantifier is not None:
+            return f&#34;L[{self.value}{self.quantifier}]&#34;
+        return f&#34;L[{self.value}]&#34;
+
+    def __str__(self):
+        return self.__repr__()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="textwalker.pattern_parser.Token" href="#textwalker.pattern_parser.Token">Token</a></li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.MatchResult"><code class="flex name class">
+<span>class <span class="ident">MatchResult</span></span>
+<span>(</span><span>matched: bool, content: str = '')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Result for match</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MatchResult:
+    &#34;&#34;&#34;
+    Result for match
+    &#34;&#34;&#34;
+
+    def __init__(self, matched: bool, content: str = &#34;&#34;):
+        self.matched = matched
+        self.content = content</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.MinMatchesNotFound"><code class="flex name class">
+<span>class <span class="ident">MinMatchesNotFound</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The minimum number of matches specified by the quantifier is not matched</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MinMatchesNotFound(Exception):
+    &#34;&#34;&#34;
+    The minimum number of matches specified by the quantifier is not matched
+    &#34;&#34;&#34;
+
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.OneOrMore"><code class="flex name class">
+<span>class <span class="ident">OneOrMore</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>one or more repetitions</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class OneOrMore(Quantifier):
+    &#34;&#34;&#34;
+    one or more repetitions
+    &#34;&#34;&#34;
+
+    def __str__(self):
+        return &#34;+&#34;
+
+    def __repr__(self):
+        return str(self)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="textwalker.pattern_parser.Quantifier" href="#textwalker.pattern_parser.Quantifier">Quantifier</a></li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser"><code class="flex name class">
+<span>class <span class="ident">PatternParser</span></span>
+<span>(</span><span>pattern)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PatternParser:
+    &#34;&#34;&#34; &#34;&#34;&#34;
+
+    def __init__(self, pattern):
+        # when parsing a chunk, `start` is the start of the chunk
+        # and `current` points to the `current` char
+        self.start = 0
+        self.current = 0
+        self.pattern = pattern
+        self.compiled = None
+
+    def is_at_end(self) -&gt; bool:
+        return self.current &gt;= len(self.pattern)
+
+    def advance(self) -&gt; str:
+        char = self.pattern[self.current]
+        self.current += 1
+        return char
+
+    def has_next(self) -&gt; bool:
+        return self.current &lt; len(self.pattern) - 1
+
+    def has_next_next(self) -&gt; bool:
+        return self.current &lt; len(self.pattern) - 2
+
+    def peek(self) -&gt; str:
+        return self.pattern[self.current]
+
+    def peek_next(self) -&gt; str:
+        return self.pattern[self.current + 1]
+
+    def peek_next_next(self) -&gt; str:
+        return self.pattern[self.current + 2]
+
+    @staticmethod
+    def coalesce_literals(tokens: List[Token]) -&gt; List[Token]:
+        &#34;&#34;&#34;
+        utility to coalesce adjacent literal chars into literal word;
+        non-literal Tokens&#39; relative ordering is untouched
+
+        context: in a group, initially each char is it&#39;s own literal
+        we need to coalesce literals to words so we can
+        match on, e.g. word repetitions
+        &#34;&#34;&#34;
+
+        # return tokens
+
+        coalesced = []
+        partials = []
+        for idx, token in enumerate(tokens):
+            # if quantifier is not None, can&#39;t coalesce into one literal
+            if isinstance(token, Literal) and token.quantifier is None:
+                partials.append(token)
+            elif len(partials) &gt; 0:
+                # coalesce and add to result
+                value = &#34;&#34;.join([literal.value for literal in partials])
+                coalesced.append(Literal(value))
+                partials = []
+
+            # add all other tokens as is
+            if not isinstance(token, Literal):
+                coalesced.append(token)
+
+        if len(partials) &gt; 0:
+            value = &#34;&#34;.join([literal.value for literal in partials])
+            coalesced.append(Literal(value))
+        return coalesced
+
+    def compile(self):
+        self.compiled = self.compile_grouping()
+
+    def compile_grouping(self, is_nested=False) -&gt; Grouping:
+        &#34;&#34;&#34;
+        compile the pattern.
+        args:
+            is_nested: whether this is nested call, i.e. grouping
+
+        pattern can be of form:
+        foo  : literal
+        [a-z]: charset (range)
+        [3-9]
+        [az] charsets (enumeration)
+        fox* : single-char quantifier: *,+,?
+        [3-9]{3,4}: quantity/numeric range
+        (foo)*: groupings
+        (foo_[a-z]*)+: groupings
+
+        NB: quantifiers can apply to any other element, except another quantifier
+
+        special chars, namely:
+            -, {, }, [, ], *, +, ?, (, ) must be escaped
+
+        escape via backslash prepended to char
+
+        An unescaped special char is an error
+
+
+        _[a-z]{1,2} i.e. can contain:
+        (foo_){1,2}
+        foo_*
+            literals: foo_
+            character sets, which can contain ranges, or specific chars: [a-z][xyz]
+            quantifier on character sets: [a-z]*
+        &#34;&#34;&#34;
+        compiled = []
+        while self.is_at_end() is False:
+            ch = self.advance()
+            if ch == &#34;(&#34;:
+                # handle grouping
+                grouping = self.compile_grouping(is_nested=True)
+                compiled.append(grouping)
+            elif ch == &#34;)&#34;:
+                if is_nested:
+                    # this terminates the grouping
+                    return Grouping(self.coalesce_literals(compiled))
+                raise UnescapedChar(&#34;)&#34;)
+            elif ch == &#34;[&#34;:
+                # this will either succeed and consume and return
+                # entire charset, or raise exception
+                charset = self.compile_charset()
+                compiled.append(charset)
+            # handle quantifiers
+            elif ch == &#34;*&#34; or ch == &#34;+&#34; or ch == &#34;?&#34;:
+                # find matchable to attach quantifier to
+                matchable = compiled[-1] if len(compiled) &gt; 0 else None
+                if matchable is None:
+                    raise UnescapedChar
+                if ch == &#34;*&#34;:
+                    matchable.quantifier = ZeroOrMore()
+                elif ch == &#34;+&#34;:
+                    matchable.quantifier = OneOrMore()
+                else:
+                    assert ch == &#34;?&#34;, &#34;unknown quantifier&#34;
+                    matchable.quantifier = ZeroOrOne()
+            elif ch == &#34;{&#34;:
+                # this will either succeed and consume the entire quantifier or raise
+                pass
+            # handle escape char
+            elif ch == &#34;\\&#34;:
+                next_char = self.advance()
+                if next_char not in ESCAPABLE_CHARS:
+                    # NOTE: currently not supporting all escape chars
+                    raise UnrecognizedEscapedChar
+                # add the escaped char as a literal
+                compiled.append(Literal(next_char))
+
+            else:
+                compiled.append(Literal(ch))
+
+        if is_nested:
+            # this is error; since this was a nested call we should have found
+            # a closing bracket; the choice of exception is imprecise
+            # because the user&#39;s intention could be to: 1) create a group
+            # and perhaps forgot the closing bracket; or 2) a literal match
+            # on open bracket &#34;(&#34; and forgot to escape; for now bracket &#34;(&#34; must be escaped
+            raise UnescapedChar(&#34;Unclosed bracket&#34;)
+
+        return Grouping(self.coalesce_literals(compiled))
+
+    def compile_charset(self) -&gt; Charset:
+        &#34;&#34;&#34;
+        should consume entire charset, i.e. should be invoked with pattern[current] == &#39;[&#39;
+        and should return &#39;[...]&#39;
+
+        raises on unclosedSet and unescapedDash
+        &#34;&#34;&#34;
+        result = []
+        closed = False
+        while self.is_at_end() is False:
+            ch = self.advance()  # consume char
+            # handle escape char
+            if ch == &#34;\\&#34;:
+                next_char = self.advance()
+                if next_char not in ESCAPABLE_CHARS:
+                    # NOTE: currently not supporting all escape chars
+                    raise UnrecognizedEscapedChar
+                # add the escaped char as a literal
+                result.append(Literal(next_char))
+
+            # handle range dash
+            if ch == &#34;-&#34;:
+                # an unescaped dash, should only appear between a range
+                # this simplifies the case, where it&#39;s the first or last char in set
+                raise UnescapedDash
+            if ch == &#34;]&#34;:
+                # closing bracket found
+                closed = True
+                break
+            else:  # ch is non-special
+                # check if it&#39;s part of a range
+                if self.has_next() and self.peek() == &#34;-&#34;:
+                    if not self.has_next_next():
+                        # unescaped dash&#39;s are only supported in range
+                        raise UnescapedDash
+                    self.advance()  # consume the dash
+                    rng_end = self.advance()
+                    rng = CharRange(ch, rng_end)
+                    result.append(rng)
+                else:  # handle literal
+                    result.append(Literal(ch))
+        if not closed:
+            raise UnclosedCharSet
+
+        return Charset(result)
+
+    @staticmethod
+    def can_consume(to_run_iteration: int, quantifier: Quantifier) -&gt; bool:
+        &#34;&#34;&#34;
+        true if can consume based on `current_repetition`; note this
+        invoked before consuming
+        &#34;&#34;&#34;
+        if isinstance(quantifier, ZeroOrMore) or isinstance(quantifier, OneOrMore):
+            return True
+        elif isinstance(quantifier, ZeroOrOne):
+            return to_run_iteration &lt; 1
+        elif quantifier is None:
+            # interpret None as 1
+            return to_run_iteration &lt; 1
+
+    @staticmethod
+    def sufficient_consumed(last_repetition, quantifier: Quantifier) -&gt; bool:
+        &#34;&#34;&#34;
+        return True if the minimum number of elements was consumed
+        NOTE this is invoked after consuming
+        &#34;&#34;&#34;
+        if isinstance(quantifier, ZeroOrOne):
+            return True
+        elif isinstance(quantifier, ZeroOrMore):
+            return True
+        elif isinstance(quantifier, OneOrMore):
+            return last_repetition &gt;= 1
+        elif quantifier is None:
+            # TODO: not sure if this correct
+            return True
+
+    def match_literal(
+        self, literal: Literal, string: str, startidx: int = 0
+    ) -&gt; MatchResult:
+        for idx, lch in enumerate(literal.value):
+            if startidx + idx == len(string):
+                return MatchResult(False)
+            if lch != string[startidx + idx]:
+                return MatchResult(False)
+        return MatchResult(True, literal.value)
+
+    def match_charset(
+        self, charset: Charset, string: str, startidx: int = 0
+    ) -&gt; MatchResult:
+        for charset_member in charset.matches:
+            if isinstance(charset_member, Literal):
+                if charset_member.value == string[startidx]:
+                    return MatchResult(True, string[startidx])
+            elif isinstance(charset_member, CharRange):
+                # not sure if this comparison will always work
+                if (
+                    charset_member.range_start
+                    &lt;= string[startidx]
+                    &lt;= charset_member.range_end
+                ):
+                    return MatchResult(True, string[startidx])
+        return MatchResult(False)
+
+    @staticmethod
+    def check_and_update_empty(
+        result: MatchResult, quantifier: Quantifier
+    ) -&gt; MatchResult:
+        &#34;&#34;&#34;
+        In some cases, a &#34;no-match&#34; of a sub-group is a match
+        is a match of zero, according to the grammar, e.g. if the quantifier is *, ?.
+
+        Returns:
+        If there is a no-match, and the quantifier allows zero matches,
+        then this will update the result to be an empty match;
+        In all other cases, it will return the `result`
+        &#34;&#34;&#34;
+        # if quantifier is [0,..] and no-match, this is treated
+        # as a match of len 0;
+        if (
+            result.matched is False
+            and isinstance(quantifier, ZeroOrMore)
+            or isinstance(quantifier, ZeroOrOne)
+        ):
+            result = MatchResult(True, &#34;&#34;)
+        # else return original result
+        return result
+
+    def match_grouping(
+        self, groupings: Grouping, string: str, startidx: int = 0
+    ) -&gt; MatchResult:
+        &#34;&#34;&#34;
+        return longest match
+        if this gets too complex, consider moving matching logic
+        to separate class
+
+        NOTES: on the matching logic:
+        - the user string may be partially consumed
+        - but generally, the pattern must be fully consumed
+
+        args:
+            # a better name might be consume_full_pattern
+            match_partial: if True, will return if pattern partially matches;
+                else raises Exception
+                user string partially matching is never an error
+
+            startidx: of string
+
+            return[MatchResult].matched is True if there is a complete match; else False
+        &#34;&#34;&#34;
+
+        groups = groupings.groups
+        gptr = 0  # sub group ptr
+        sptr = startidx  # string ptr
+        repetition = 0  # count of repetitions of current sub group
+        matched = []
+        # the last gptr location where a match was found
+        # needed to determine if the pattern was fully consumed
+        last_matched_gptr = -1
+        # whether the subgroup has matched
+        while sptr &lt; len(string) and gptr &lt; len(groups):
+
+            # there are 2 things to check:
+            # 1) is there a match
+            # 2) is the number of repetitions of match as expected
+
+            # consume as much of string (maximum munch) using subgroup
+            subgroup = groups[gptr]
+
+            # does the quantifier on this subgroup, allow it to consume more chars
+            if self.can_consume(repetition, subgroup.quantifier):
+
+                # invoke the right handler
+                res = None
+                if isinstance(subgroup, Literal):
+                    res = self.match_literal(subgroup, string, sptr)
+                    res = self.check_and_update_empty(res, subgroup.quantifier)
+                elif isinstance(subgroup, Charset):
+                    res = self.match_charset(subgroup, string, sptr)
+                    res = self.check_and_update_empty(res, subgroup.quantifier)
+                else:
+                    assert isinstance(
+                        subgroup, Grouping
+                    ), &#34;unexpected sub-expression type&#34;
+                    # groupings can be nested
+                    # so the matching algorithm must be recursive
+                    res = self.match_grouping(subgroup, string, sptr)
+                    res = self.check_and_update_empty(res, subgroup.quantifier)
+
+                # current component matched
+                if res.matched:
+                    repetition += 1
+                    matched.append(res.content)
+                    # increment string pointer
+                    sptr += len(res.content)
+                    last_matched_gptr = gptr
+
+                    # increment the gptr; this represents
+                    # something not matching with [0,...] quantifier
+                    # we treat this as-a 0len match
+                    if len(res.content) == 0:
+                        gptr += 1
+                        repetition = 0
+
+                # current component did not match
+                else:
+                    # no match, move to next matchable
+                    # check minimum match cond was violated
+                    if not self.sufficient_consumed(repetition, subgroup.quantifier):
+                        raise MinMatchesNotFound
+
+                    repetition = 0
+                    # increment component pointer
+                    gptr += 1
+            else:
+                # quantifier restricts further consume
+                # consider next subgroup
+                gptr += 1
+                repetition = 0
+                continue
+
+        # we want the pattern to be fully consumed and at least one
+        # group has not been matched
+        content = arr2str(matched)
+        if len(content) == 0 or last_matched_gptr &lt; len(groups) - 1:
+            # this seems to be needed because it attempts partial match
+            # perhaps this should be labelled better
+            return MatchResult(False)
+
+        return MatchResult(True, content)
+
+    def match(self, string: str, startidx: int = 0) -&gt; str:
+        &#34;&#34;&#34;
+        Attempt to match `string` starting at `startidx`
+        Args:
+            string: string to match
+            startidx: location to start search
+        Return
+            None: no-match
+            str: match (could be zero length)
+        &#34;&#34;&#34;
+        matched = None
+        try:
+            result = self.match_grouping(self.compiled, string, startidx)
+            if result.matched:
+                matched = result.content
+        except MinMatchesNotFound:
+            pass
+
+        return matched</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="textwalker.pattern_parser.PatternParser.can_consume"><code class="name flex">
+<span>def <span class="ident">can_consume</span></span>(<span>to_run_iteration: int, quantifier: <a title="textwalker.pattern_parser.Quantifier" href="#textwalker.pattern_parser.Quantifier">Quantifier</a>) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>true if can consume based on <code>current_repetition</code>; note this
+invoked before consuming</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def can_consume(to_run_iteration: int, quantifier: Quantifier) -&gt; bool:
+    &#34;&#34;&#34;
+    true if can consume based on `current_repetition`; note this
+    invoked before consuming
+    &#34;&#34;&#34;
+    if isinstance(quantifier, ZeroOrMore) or isinstance(quantifier, OneOrMore):
+        return True
+    elif isinstance(quantifier, ZeroOrOne):
+        return to_run_iteration &lt; 1
+    elif quantifier is None:
+        # interpret None as 1
+        return to_run_iteration &lt; 1</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.check_and_update_empty"><code class="name flex">
+<span>def <span class="ident">check_and_update_empty</span></span>(<span>result: <a title="textwalker.pattern_parser.MatchResult" href="#textwalker.pattern_parser.MatchResult">MatchResult</a>, quantifier: <a title="textwalker.pattern_parser.Quantifier" href="#textwalker.pattern_parser.Quantifier">Quantifier</a>) ‑> <a title="textwalker.pattern_parser.MatchResult" href="#textwalker.pattern_parser.MatchResult">MatchResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>In some cases, a "no-match" of a sub-group is a match
+is a match of zero, according to the grammar, e.g. if the quantifier is *, ?.</p>
+<p>Returns:
+If there is a no-match, and the quantifier allows zero matches,
+then this will update the result to be an empty match;
+In all other cases, it will return the <code>result</code></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def check_and_update_empty(
+    result: MatchResult, quantifier: Quantifier
+) -&gt; MatchResult:
+    &#34;&#34;&#34;
+    In some cases, a &#34;no-match&#34; of a sub-group is a match
+    is a match of zero, according to the grammar, e.g. if the quantifier is *, ?.
+
+    Returns:
+    If there is a no-match, and the quantifier allows zero matches,
+    then this will update the result to be an empty match;
+    In all other cases, it will return the `result`
+    &#34;&#34;&#34;
+    # if quantifier is [0,..] and no-match, this is treated
+    # as a match of len 0;
+    if (
+        result.matched is False
+        and isinstance(quantifier, ZeroOrMore)
+        or isinstance(quantifier, ZeroOrOne)
+    ):
+        result = MatchResult(True, &#34;&#34;)
+    # else return original result
+    return result</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.coalesce_literals"><code class="name flex">
+<span>def <span class="ident">coalesce_literals</span></span>(<span>tokens: List[<a title="textwalker.pattern_parser.Token" href="#textwalker.pattern_parser.Token">Token</a>]) ‑> List[<a title="textwalker.pattern_parser.Token" href="#textwalker.pattern_parser.Token">Token</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>utility to coalesce adjacent literal chars into literal word;
+non-literal Tokens' relative ordering is untouched</p>
+<p>context: in a group, initially each char is it's own literal
+we need to coalesce literals to words so we can
+match on, e.g. word repetitions</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def coalesce_literals(tokens: List[Token]) -&gt; List[Token]:
+    &#34;&#34;&#34;
+    utility to coalesce adjacent literal chars into literal word;
+    non-literal Tokens&#39; relative ordering is untouched
+
+    context: in a group, initially each char is it&#39;s own literal
+    we need to coalesce literals to words so we can
+    match on, e.g. word repetitions
+    &#34;&#34;&#34;
+
+    # return tokens
+
+    coalesced = []
+    partials = []
+    for idx, token in enumerate(tokens):
+        # if quantifier is not None, can&#39;t coalesce into one literal
+        if isinstance(token, Literal) and token.quantifier is None:
+            partials.append(token)
+        elif len(partials) &gt; 0:
+            # coalesce and add to result
+            value = &#34;&#34;.join([literal.value for literal in partials])
+            coalesced.append(Literal(value))
+            partials = []
+
+        # add all other tokens as is
+        if not isinstance(token, Literal):
+            coalesced.append(token)
+
+    if len(partials) &gt; 0:
+        value = &#34;&#34;.join([literal.value for literal in partials])
+        coalesced.append(Literal(value))
+    return coalesced</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.sufficient_consumed"><code class="name flex">
+<span>def <span class="ident">sufficient_consumed</span></span>(<span>last_repetition, quantifier: <a title="textwalker.pattern_parser.Quantifier" href="#textwalker.pattern_parser.Quantifier">Quantifier</a>) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>return True if the minimum number of elements was consumed
+NOTE this is invoked after consuming</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def sufficient_consumed(last_repetition, quantifier: Quantifier) -&gt; bool:
+    &#34;&#34;&#34;
+    return True if the minimum number of elements was consumed
+    NOTE this is invoked after consuming
+    &#34;&#34;&#34;
+    if isinstance(quantifier, ZeroOrOne):
+        return True
+    elif isinstance(quantifier, ZeroOrMore):
+        return True
+    elif isinstance(quantifier, OneOrMore):
+        return last_repetition &gt;= 1
+    elif quantifier is None:
+        # TODO: not sure if this correct
+        return True</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="textwalker.pattern_parser.PatternParser.advance"><code class="name flex">
+<span>def <span class="ident">advance</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def advance(self) -&gt; str:
+    char = self.pattern[self.current]
+    self.current += 1
+    return char</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.compile"><code class="name flex">
+<span>def <span class="ident">compile</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compile(self):
+    self.compiled = self.compile_grouping()</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.compile_charset"><code class="name flex">
+<span>def <span class="ident">compile_charset</span></span>(<span>self) ‑> <a title="textwalker.pattern_parser.Charset" href="#textwalker.pattern_parser.Charset">Charset</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>should consume entire charset, i.e. should be invoked with pattern[current] == '['
+and should return '[&hellip;]'</p>
+<p>raises on unclosedSet and unescapedDash</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compile_charset(self) -&gt; Charset:
+    &#34;&#34;&#34;
+    should consume entire charset, i.e. should be invoked with pattern[current] == &#39;[&#39;
+    and should return &#39;[...]&#39;
+
+    raises on unclosedSet and unescapedDash
+    &#34;&#34;&#34;
+    result = []
+    closed = False
+    while self.is_at_end() is False:
+        ch = self.advance()  # consume char
+        # handle escape char
+        if ch == &#34;\\&#34;:
+            next_char = self.advance()
+            if next_char not in ESCAPABLE_CHARS:
+                # NOTE: currently not supporting all escape chars
+                raise UnrecognizedEscapedChar
+            # add the escaped char as a literal
+            result.append(Literal(next_char))
+
+        # handle range dash
+        if ch == &#34;-&#34;:
+            # an unescaped dash, should only appear between a range
+            # this simplifies the case, where it&#39;s the first or last char in set
+            raise UnescapedDash
+        if ch == &#34;]&#34;:
+            # closing bracket found
+            closed = True
+            break
+        else:  # ch is non-special
+            # check if it&#39;s part of a range
+            if self.has_next() and self.peek() == &#34;-&#34;:
+                if not self.has_next_next():
+                    # unescaped dash&#39;s are only supported in range
+                    raise UnescapedDash
+                self.advance()  # consume the dash
+                rng_end = self.advance()
+                rng = CharRange(ch, rng_end)
+                result.append(rng)
+            else:  # handle literal
+                result.append(Literal(ch))
+    if not closed:
+        raise UnclosedCharSet
+
+    return Charset(result)</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.compile_grouping"><code class="name flex">
+<span>def <span class="ident">compile_grouping</span></span>(<span>self, is_nested=False) ‑> <a title="textwalker.pattern_parser.Grouping" href="#textwalker.pattern_parser.Grouping">Grouping</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>compile the pattern.
+args:
+is_nested: whether this is nested call, i.e. grouping</p>
+<p>pattern can be of form:
+foo
+: literal</p>
+<p>[3-9]
+[az] charsets (enumeration)
+fox<em> : single-char quantifier: </em>,+,?
+[3-9]{3,4}: quantity/numeric range
+(foo)<em>: groupings
+(foo_<a href="charset" title="range">a-z</a></em>)+: groupings</p>
+<p>NB: quantifiers can apply to any other element, except another quantifier</p>
+<p>special chars, namely:
+-, {, }, [, ], *, +, ?, (, ) must be escaped</p>
+<p>escape via backslash prepended to char</p>
+<p>An unescaped special char is an error</p>
+<p><em><a 1_2="1,2" href="charset" title="range">a-z</a> i.e. can contain:
+(foo</em>){1,2}
+foo_<em>
+literals: foo_
+character sets, which can contain ranges, or specific chars: <a href="charset" title="range">a-z</a>[xyz]
+quantifier on character sets: <a href="charset" title="range">a-z</a></em></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compile_grouping(self, is_nested=False) -&gt; Grouping:
+    &#34;&#34;&#34;
+    compile the pattern.
+    args:
+        is_nested: whether this is nested call, i.e. grouping
+
+    pattern can be of form:
+    foo  : literal
+    [a-z]: charset (range)
+    [3-9]
+    [az] charsets (enumeration)
+    fox* : single-char quantifier: *,+,?
+    [3-9]{3,4}: quantity/numeric range
+    (foo)*: groupings
+    (foo_[a-z]*)+: groupings
+
+    NB: quantifiers can apply to any other element, except another quantifier
+
+    special chars, namely:
+        -, {, }, [, ], *, +, ?, (, ) must be escaped
+
+    escape via backslash prepended to char
+
+    An unescaped special char is an error
+
+
+    _[a-z]{1,2} i.e. can contain:
+    (foo_){1,2}
+    foo_*
+        literals: foo_
+        character sets, which can contain ranges, or specific chars: [a-z][xyz]
+        quantifier on character sets: [a-z]*
+    &#34;&#34;&#34;
+    compiled = []
+    while self.is_at_end() is False:
+        ch = self.advance()
+        if ch == &#34;(&#34;:
+            # handle grouping
+            grouping = self.compile_grouping(is_nested=True)
+            compiled.append(grouping)
+        elif ch == &#34;)&#34;:
+            if is_nested:
+                # this terminates the grouping
+                return Grouping(self.coalesce_literals(compiled))
+            raise UnescapedChar(&#34;)&#34;)
+        elif ch == &#34;[&#34;:
+            # this will either succeed and consume and return
+            # entire charset, or raise exception
+            charset = self.compile_charset()
+            compiled.append(charset)
+        # handle quantifiers
+        elif ch == &#34;*&#34; or ch == &#34;+&#34; or ch == &#34;?&#34;:
+            # find matchable to attach quantifier to
+            matchable = compiled[-1] if len(compiled) &gt; 0 else None
+            if matchable is None:
+                raise UnescapedChar
+            if ch == &#34;*&#34;:
+                matchable.quantifier = ZeroOrMore()
+            elif ch == &#34;+&#34;:
+                matchable.quantifier = OneOrMore()
+            else:
+                assert ch == &#34;?&#34;, &#34;unknown quantifier&#34;
+                matchable.quantifier = ZeroOrOne()
+        elif ch == &#34;{&#34;:
+            # this will either succeed and consume the entire quantifier or raise
+            pass
+        # handle escape char
+        elif ch == &#34;\\&#34;:
+            next_char = self.advance()
+            if next_char not in ESCAPABLE_CHARS:
+                # NOTE: currently not supporting all escape chars
+                raise UnrecognizedEscapedChar
+            # add the escaped char as a literal
+            compiled.append(Literal(next_char))
+
+        else:
+            compiled.append(Literal(ch))
+
+    if is_nested:
+        # this is error; since this was a nested call we should have found
+        # a closing bracket; the choice of exception is imprecise
+        # because the user&#39;s intention could be to: 1) create a group
+        # and perhaps forgot the closing bracket; or 2) a literal match
+        # on open bracket &#34;(&#34; and forgot to escape; for now bracket &#34;(&#34; must be escaped
+        raise UnescapedChar(&#34;Unclosed bracket&#34;)
+
+    return Grouping(self.coalesce_literals(compiled))</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.has_next"><code class="name flex">
+<span>def <span class="ident">has_next</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def has_next(self) -&gt; bool:
+    return self.current &lt; len(self.pattern) - 1</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.has_next_next"><code class="name flex">
+<span>def <span class="ident">has_next_next</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def has_next_next(self) -&gt; bool:
+    return self.current &lt; len(self.pattern) - 2</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.is_at_end"><code class="name flex">
+<span>def <span class="ident">is_at_end</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_at_end(self) -&gt; bool:
+    return self.current &gt;= len(self.pattern)</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.match"><code class="name flex">
+<span>def <span class="ident">match</span></span>(<span>self, string: str, startidx: int = 0) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Attempt to match <code>string</code> starting at <code>startidx</code></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>string</code></strong></dt>
+<dd>string to match</dd>
+<dt><strong><code>startidx</code></strong></dt>
+<dd>location to start search</dd>
+</dl>
+<p>Return
+None: no-match
+str: match (could be zero length)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def match(self, string: str, startidx: int = 0) -&gt; str:
+    &#34;&#34;&#34;
+    Attempt to match `string` starting at `startidx`
+    Args:
+        string: string to match
+        startidx: location to start search
+    Return
+        None: no-match
+        str: match (could be zero length)
+    &#34;&#34;&#34;
+    matched = None
+    try:
+        result = self.match_grouping(self.compiled, string, startidx)
+        if result.matched:
+            matched = result.content
+    except MinMatchesNotFound:
+        pass
+
+    return matched</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.match_charset"><code class="name flex">
+<span>def <span class="ident">match_charset</span></span>(<span>self, charset: <a title="textwalker.pattern_parser.Charset" href="#textwalker.pattern_parser.Charset">Charset</a>, string: str, startidx: int = 0) ‑> <a title="textwalker.pattern_parser.MatchResult" href="#textwalker.pattern_parser.MatchResult">MatchResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def match_charset(
+    self, charset: Charset, string: str, startidx: int = 0
+) -&gt; MatchResult:
+    for charset_member in charset.matches:
+        if isinstance(charset_member, Literal):
+            if charset_member.value == string[startidx]:
+                return MatchResult(True, string[startidx])
+        elif isinstance(charset_member, CharRange):
+            # not sure if this comparison will always work
+            if (
+                charset_member.range_start
+                &lt;= string[startidx]
+                &lt;= charset_member.range_end
+            ):
+                return MatchResult(True, string[startidx])
+    return MatchResult(False)</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.match_grouping"><code class="name flex">
+<span>def <span class="ident">match_grouping</span></span>(<span>self, groupings: <a title="textwalker.pattern_parser.Grouping" href="#textwalker.pattern_parser.Grouping">Grouping</a>, string: str, startidx: int = 0) ‑> <a title="textwalker.pattern_parser.MatchResult" href="#textwalker.pattern_parser.MatchResult">MatchResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>return longest match
+if this gets too complex, consider moving matching logic
+to separate class</p>
+<p>NOTES: on the matching logic:
+- the user string may be partially consumed
+- but generally, the pattern must be fully consumed</p>
+<p>args:
+# a better name might be consume_full_pattern
+match_partial: if True, will return if pattern partially matches;
+else raises Exception
+user string partially matching is never an error</p>
+<pre><code>startidx: of string
+
+return[MatchResult].matched is True if there is a complete match; else False
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def match_grouping(
+    self, groupings: Grouping, string: str, startidx: int = 0
+) -&gt; MatchResult:
+    &#34;&#34;&#34;
+    return longest match
+    if this gets too complex, consider moving matching logic
+    to separate class
+
+    NOTES: on the matching logic:
+    - the user string may be partially consumed
+    - but generally, the pattern must be fully consumed
+
+    args:
+        # a better name might be consume_full_pattern
+        match_partial: if True, will return if pattern partially matches;
+            else raises Exception
+            user string partially matching is never an error
+
+        startidx: of string
+
+        return[MatchResult].matched is True if there is a complete match; else False
+    &#34;&#34;&#34;
+
+    groups = groupings.groups
+    gptr = 0  # sub group ptr
+    sptr = startidx  # string ptr
+    repetition = 0  # count of repetitions of current sub group
+    matched = []
+    # the last gptr location where a match was found
+    # needed to determine if the pattern was fully consumed
+    last_matched_gptr = -1
+    # whether the subgroup has matched
+    while sptr &lt; len(string) and gptr &lt; len(groups):
+
+        # there are 2 things to check:
+        # 1) is there a match
+        # 2) is the number of repetitions of match as expected
+
+        # consume as much of string (maximum munch) using subgroup
+        subgroup = groups[gptr]
+
+        # does the quantifier on this subgroup, allow it to consume more chars
+        if self.can_consume(repetition, subgroup.quantifier):
+
+            # invoke the right handler
+            res = None
+            if isinstance(subgroup, Literal):
+                res = self.match_literal(subgroup, string, sptr)
+                res = self.check_and_update_empty(res, subgroup.quantifier)
+            elif isinstance(subgroup, Charset):
+                res = self.match_charset(subgroup, string, sptr)
+                res = self.check_and_update_empty(res, subgroup.quantifier)
+            else:
+                assert isinstance(
+                    subgroup, Grouping
+                ), &#34;unexpected sub-expression type&#34;
+                # groupings can be nested
+                # so the matching algorithm must be recursive
+                res = self.match_grouping(subgroup, string, sptr)
+                res = self.check_and_update_empty(res, subgroup.quantifier)
+
+            # current component matched
+            if res.matched:
+                repetition += 1
+                matched.append(res.content)
+                # increment string pointer
+                sptr += len(res.content)
+                last_matched_gptr = gptr
+
+                # increment the gptr; this represents
+                # something not matching with [0,...] quantifier
+                # we treat this as-a 0len match
+                if len(res.content) == 0:
+                    gptr += 1
+                    repetition = 0
+
+            # current component did not match
+            else:
+                # no match, move to next matchable
+                # check minimum match cond was violated
+                if not self.sufficient_consumed(repetition, subgroup.quantifier):
+                    raise MinMatchesNotFound
+
+                repetition = 0
+                # increment component pointer
+                gptr += 1
+        else:
+            # quantifier restricts further consume
+            # consider next subgroup
+            gptr += 1
+            repetition = 0
+            continue
+
+    # we want the pattern to be fully consumed and at least one
+    # group has not been matched
+    content = arr2str(matched)
+    if len(content) == 0 or last_matched_gptr &lt; len(groups) - 1:
+        # this seems to be needed because it attempts partial match
+        # perhaps this should be labelled better
+        return MatchResult(False)
+
+    return MatchResult(True, content)</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.match_literal"><code class="name flex">
+<span>def <span class="ident">match_literal</span></span>(<span>self, literal: <a title="textwalker.pattern_parser.Literal" href="#textwalker.pattern_parser.Literal">Literal</a>, string: str, startidx: int = 0) ‑> <a title="textwalker.pattern_parser.MatchResult" href="#textwalker.pattern_parser.MatchResult">MatchResult</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def match_literal(
+    self, literal: Literal, string: str, startidx: int = 0
+) -&gt; MatchResult:
+    for idx, lch in enumerate(literal.value):
+        if startidx + idx == len(string):
+            return MatchResult(False)
+        if lch != string[startidx + idx]:
+            return MatchResult(False)
+    return MatchResult(True, literal.value)</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.peek"><code class="name flex">
+<span>def <span class="ident">peek</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def peek(self) -&gt; str:
+    return self.pattern[self.current]</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.peek_next"><code class="name flex">
+<span>def <span class="ident">peek_next</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def peek_next(self) -&gt; str:
+    return self.pattern[self.current + 1]</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.peek_next_next"><code class="name flex">
+<span>def <span class="ident">peek_next_next</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def peek_next_next(self) -&gt; str:
+    return self.pattern[self.current + 2]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="textwalker.pattern_parser.Quantifier"><code class="flex name class">
+<span>class <span class="ident">Quantifier</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>base quantifier class</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Quantifier:
+    &#34;&#34;&#34;
+    base quantifier class
+    &#34;&#34;&#34;
+
+    pass</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="textwalker.pattern_parser.OneOrMore" href="#textwalker.pattern_parser.OneOrMore">OneOrMore</a></li>
+<li><a title="textwalker.pattern_parser.ZeroOrMore" href="#textwalker.pattern_parser.ZeroOrMore">ZeroOrMore</a></li>
+<li><a title="textwalker.pattern_parser.ZeroOrOne" href="#textwalker.pattern_parser.ZeroOrOne">ZeroOrOne</a></li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.Token"><code class="flex name class">
+<span>class <span class="ident">Token</span></span>
+<span>(</span><span>quantifier=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>base token type</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Token:
+    &#34;&#34;&#34;
+    base token type
+    &#34;&#34;&#34;
+
+    def __init__(self, quantifier=None):
+        self.quantifier = quantifier</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="textwalker.pattern_parser.CharRange" href="#textwalker.pattern_parser.CharRange">CharRange</a></li>
+<li><a title="textwalker.pattern_parser.Charset" href="#textwalker.pattern_parser.Charset">Charset</a></li>
+<li><a title="textwalker.pattern_parser.Grouping" href="#textwalker.pattern_parser.Grouping">Grouping</a></li>
+<li><a title="textwalker.pattern_parser.Literal" href="#textwalker.pattern_parser.Literal">Literal</a></li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.UnclosedCharSet"><code class="flex name class">
+<span>class <span class="ident">UnclosedCharSet</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class UnclosedCharSet(Exception):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.UnescapedChar"><code class="flex name class">
+<span>class <span class="ident">UnescapedChar</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>These represent the constraint that special chars be escaped</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class UnescapedChar(Exception):
+    &#34;&#34;&#34;
+    These represent the constraint that special chars be escaped
+    &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.UnescapedDash"><code class="flex name class">
+<span>class <span class="ident">UnescapedDash</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class UnescapedDash(Exception):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.UnrecognizedEscapedChar"><code class="flex name class">
+<span>class <span class="ident">UnrecognizedEscapedChar</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This represents that random characters should not be escaped</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class UnrecognizedEscapedChar(Exception):
+    &#34;&#34;&#34;
+    This represents that random characters should not be escaped
+    &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.ZeroOrMore"><code class="flex name class">
+<span>class <span class="ident">ZeroOrMore</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>zero or more repetitions</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ZeroOrMore(Quantifier):
+    &#34;&#34;&#34;
+    zero or more repetitions
+    &#34;&#34;&#34;
+
+    def __str__(self):
+        return &#34;*&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="textwalker.pattern_parser.Quantifier" href="#textwalker.pattern_parser.Quantifier">Quantifier</a></li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.ZeroOrOne"><code class="flex name class">
+<span>class <span class="ident">ZeroOrOne</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>base quantifier class</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ZeroOrOne(Quantifier):
+    def __str__(self):
+        return &#34;?&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="textwalker.pattern_parser.Quantifier" href="#textwalker.pattern_parser.Quantifier">Quantifier</a></li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="textwalker.pattern_parser.test" href="#textwalker.pattern_parser.test">test</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="textwalker.pattern_parser.CharRange" href="#textwalker.pattern_parser.CharRange">CharRange</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.Charset" href="#textwalker.pattern_parser.Charset">Charset</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.Grouping" href="#textwalker.pattern_parser.Grouping">Grouping</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.Literal" href="#textwalker.pattern_parser.Literal">Literal</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.MatchResult" href="#textwalker.pattern_parser.MatchResult">MatchResult</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.MinMatchesNotFound" href="#textwalker.pattern_parser.MinMatchesNotFound">MinMatchesNotFound</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.OneOrMore" href="#textwalker.pattern_parser.OneOrMore">OneOrMore</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.PatternParser" href="#textwalker.pattern_parser.PatternParser">PatternParser</a></code></h4>
+<ul class="">
+<li><code><a title="textwalker.pattern_parser.PatternParser.advance" href="#textwalker.pattern_parser.PatternParser.advance">advance</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.can_consume" href="#textwalker.pattern_parser.PatternParser.can_consume">can_consume</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.check_and_update_empty" href="#textwalker.pattern_parser.PatternParser.check_and_update_empty">check_and_update_empty</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.coalesce_literals" href="#textwalker.pattern_parser.PatternParser.coalesce_literals">coalesce_literals</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.compile" href="#textwalker.pattern_parser.PatternParser.compile">compile</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.compile_charset" href="#textwalker.pattern_parser.PatternParser.compile_charset">compile_charset</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.compile_grouping" href="#textwalker.pattern_parser.PatternParser.compile_grouping">compile_grouping</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.has_next" href="#textwalker.pattern_parser.PatternParser.has_next">has_next</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.has_next_next" href="#textwalker.pattern_parser.PatternParser.has_next_next">has_next_next</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.is_at_end" href="#textwalker.pattern_parser.PatternParser.is_at_end">is_at_end</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.match" href="#textwalker.pattern_parser.PatternParser.match">match</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.match_charset" href="#textwalker.pattern_parser.PatternParser.match_charset">match_charset</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.match_grouping" href="#textwalker.pattern_parser.PatternParser.match_grouping">match_grouping</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.match_literal" href="#textwalker.pattern_parser.PatternParser.match_literal">match_literal</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.peek" href="#textwalker.pattern_parser.PatternParser.peek">peek</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.peek_next" href="#textwalker.pattern_parser.PatternParser.peek_next">peek_next</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.peek_next_next" href="#textwalker.pattern_parser.PatternParser.peek_next_next">peek_next_next</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.sufficient_consumed" href="#textwalker.pattern_parser.PatternParser.sufficient_consumed">sufficient_consumed</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.Quantifier" href="#textwalker.pattern_parser.Quantifier">Quantifier</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.Token" href="#textwalker.pattern_parser.Token">Token</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.UnclosedCharSet" href="#textwalker.pattern_parser.UnclosedCharSet">UnclosedCharSet</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.UnescapedChar" href="#textwalker.pattern_parser.UnescapedChar">UnescapedChar</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.UnescapedDash" href="#textwalker.pattern_parser.UnescapedDash">UnescapedDash</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.UnrecognizedEscapedChar" href="#textwalker.pattern_parser.UnrecognizedEscapedChar">UnrecognizedEscapedChar</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.ZeroOrMore" href="#textwalker.pattern_parser.ZeroOrMore">ZeroOrMore</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.ZeroOrOne" href="#textwalker.pattern_parser.ZeroOrOne">ZeroOrOne</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
