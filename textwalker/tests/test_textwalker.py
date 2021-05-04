@@ -1,7 +1,7 @@
 from textwalker import TextWalker
 
 
-def parse_tsql_def_0():
+def test_parse_sql_table_definition():
     """
     example: parse t-sql table definition for table and column names
     """
@@ -23,8 +23,9 @@ def parse_tsql_def_0():
     tw.walk_many(["CREATE", "TABLE"])
     tname_match = tw.walk("dbo.[a-z0-9_]+")
     tablename = tname_match.replace("dbo.", "")
-    print(f"table name is {tablename}")
-    tw.walk("\(")
+    assert tablename == "car_inventory", "table name did not match"
+
+    tw.walk("\\(")
 
     # now attempt to parse columns
     cols_text, _ = tw.walk_until("WITH")
@@ -33,4 +34,14 @@ def parse_tsql_def_0():
     col_names = []
     for col_def in cols_text.split(","):
         col_names.append(col_def.strip().split(" ")[0])
-    print(f"columns names are:  {col_names}")
+    assert col_names == [
+        "cp_catalog_page_sk",
+        "cp_catalog_page_id",
+        "cp_start_date_sk",
+        "cp_end_date_sk",
+        "cp_department",
+        "cp_catalog_number",
+        "cp_catalog_page_number",
+        "cp_description",
+        "cp_type",
+    ]

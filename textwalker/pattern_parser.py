@@ -175,6 +175,7 @@ class PatternParser:
         self.current = 0
         self.pattern = pattern
         self.compiled = None
+        self.compile()
 
     def is_at_end(self) -> bool:
         return self.current >= len(self.pattern)
@@ -234,7 +235,11 @@ class PatternParser:
         return coalesced
 
     def compile(self):
-        self.compiled = self.compile_grouping()
+        """
+        compile the user supplied pattern
+        """
+        if self.compiled is None:
+            self.compiled = self.compile_grouping()
 
     def compile_grouping(self, is_nested=False) -> Grouping:
         """

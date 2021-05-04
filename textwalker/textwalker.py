@@ -38,7 +38,7 @@ class TextWalker:
             ws_parser = PatternParser(self.word_delim)
             while True:
                 match = ws_parser.match(self.text, self.textidx)
-                if len(match) == 0:
+                if match is None:
                     break
                 self.textidx += len(match)
 
@@ -62,12 +62,11 @@ class TextWalker:
         returns the pair ( substring upto match, match)
         """
         startidx = self.textidx
-        trail = []
         pparser = PatternParser(pattern)
         while self.textidx < len(self.text) - 1:
             # will consume until there is a match
             match = pparser.match(self.text, self.textidx)
-            if len(match) > 0:
+            if match is not None:
                 return self.text[startidx : self.textidx], match
             self.textidx += 1
         return self.text[startidx:], ""
