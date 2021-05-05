@@ -9,6 +9,8 @@ import os.path
 def generate_docs(docs_dir: str):
     """
     python callable that creates docs like docs/textwalker.html, docs/patternparser.py
+    Args:
+        docs_dir: location to output docs to
     """
     if not os.path.exists(docs_dir):
         print(f'{docs_dir} does not exist; creating dir')
@@ -33,6 +35,9 @@ def generate_docs(docs_dir: str):
 
 
 def task_run_tests():
+    """
+    run tests
+    """
     task = {
         'actions': ['pytest textwalker'],
         'verbosity': 2
@@ -40,7 +45,21 @@ def task_run_tests():
     return task
 
 
+def task_run_tests_with_codecov():
+    """
+    run tests with codecov
+    """
+    task = {
+        'actions': ['pytest --cov=textwalker'],
+        'verbosity': 2
+    }
+    return task
+
+
 def task_run_flake8():
+    """
+    calls flake8 linter
+    """
     task = {
         'actions': ['flake8 textwalker'],
         'verbosity': 2
@@ -49,6 +68,9 @@ def task_run_flake8():
 
 
 def task_run_black():
+    """
+    calls black code formatter
+    """
     task = {
         'actions': ['black textwalker'],
         'verbosity': 2
@@ -56,10 +78,10 @@ def task_run_black():
     return task
 
 
-def task_run_pdoc():
+def task_run_pdoc_cli():
     """
-    pdoc3 : https://pdoc3.github.io/pdoc/doc/pdoc/#programmatic-usage
     calls pdoc via CLI
+    pdoc3 : https://pdoc3.github.io/pdoc/doc/pdoc/#programmatic-usage
     """
     task = {
         'actions': ['pdoc3 --html --force textwalker -o docs'],
@@ -68,10 +90,10 @@ def task_run_pdoc():
     return task
 
 
-def task_run_pdoc2():
+def task_run_pdoc():
     """
-    pdoc3 : https://pdoc3.github.io/pdoc/doc/pdoc/#programmatic-usage
     calls pdoc via python
+    pdoc3 : https://pdoc3.github.io/pdoc/doc/pdoc/#programmatic-usage
     """
     task = {
         'actions': [(generate_docs, ('docs',))],
