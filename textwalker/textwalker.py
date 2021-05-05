@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from .pattern_parser import PatternParser
 
 
@@ -50,7 +50,7 @@ class TextWalker:
         self.textidx += len(match)
         return match
 
-    def walk_until(self, pattern: str) -> (str, str):
+    def walk_until(self, pattern: str) -> Tuple[str, str]:
         """
         walk until pattern matches, by iterating by one
         character.

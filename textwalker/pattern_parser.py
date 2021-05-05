@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from .utils import arr2str
 
@@ -22,12 +22,25 @@ class UnescapedChar(Exception):
     """
     These represent the constraint that special chars be escaped
     """
+    pass
 
 
 class UnrecognizedEscapedChar(Exception):
     """
     This represents that random characters should not be escaped
     """
+    pass
+
+
+class UnescapedDash(Exception):
+    """
+    TODO: replace usage with UnrecognizedEscapedChar
+    """
+    pass
+
+
+class UnclosedCharSet(Exception):
+    pass
 
 
 # Quantifier classes
@@ -65,14 +78,6 @@ class OneOrMore(Quantifier):
 class ZeroOrOne(Quantifier):
     def __str__(self):
         return "?"
-
-
-class UnescapedDash(Exception):
-    pass
-
-
-class UnclosedCharSet(Exception):
-    pass
 
 
 class Token:
@@ -371,7 +376,7 @@ class PatternParser:
                 else:  # handle literal
                     result.append(Literal(ch))
         if not closed:
-            raise UnclosedCharSet
+            raise UnclosedCharSet()
 
         return Charset(result)
 
@@ -388,6 +393,7 @@ class PatternParser:
         elif quantifier is None:
             # interpret None as 1
             return to_run_iteration < 1
+        return True
 
     @staticmethod
     def sufficient_consumed(last_repetition, quantifier: Quantifier) -> bool:
@@ -403,6 +409,8 @@ class PatternParser:
             return last_repetition >= 1
         elif quantifier is None:
             # TODO: not sure if this correct
+            return True
+        else:
             return True
 
     def match_literal(
@@ -559,7 +567,7 @@ class PatternParser:
 
         return MatchResult(True, content)
 
-    def match(self, string: str, startidx: int = 0) -> str:
+    def match(self, string: str, startidx: int = 0) -> Optional[str]:
         """
         Attempt to match `string` starting at `startidx`
         Args:
@@ -578,20 +586,3 @@ class PatternParser:
             pass
 
         return matched
-
-
-def test():
-    pattern, match, _ = "(hel[a-z]p)+", "helxphelyp9", "helxphelyp"
-    pattern, match, _ = ("(x[a-z]+y)*a", "a", "a")
-    pattern, match = "\\(", "("
-    pattern, match, _ = (("((a*b)+)", "bcard", "b"),)
-    # specify i
-
-    pat = PatternParser(pattern)
-    pat.compile()
-    print(f"compiled pattern is {pat.compiled}")
-    print(pat.match(match))
-
-
-if __name__ == "__main__":
-    test()
