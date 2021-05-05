@@ -5,6 +5,7 @@
 ![tests](https://github.com/spandanb/textwalker/actions/workflows/run-tests.yml/badge.svg)
 ![tests](https://github.com/spandanb/textwalker/actions/workflows/python-package.yml/badge.svg)
 ![tests](https://github.com/spandanb/textwalker/actions/workflows/publish-package.yml/badge.svg)
+[![codecov](https://codecov.io/gh/spandanb/textwalker/branch/main/graph/badge.svg?token=SXS209QVCC)](https://codecov.io/gh/spandanb/textwalker)
 
 [docs](http://www.spandanbemby.com/textwalker/)
 
