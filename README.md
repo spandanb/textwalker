@@ -2,7 +2,13 @@
 
 ## Overview
 
-`TextWalker` allows for an intuitive way to parse unstructured text.
+![tests](https://github.com/spandanb/textwalker/actions/workflows/run-tests.yml/badge.svg)
+![tests](https://github.com/spandanb/textwalker/actions/workflows/python-package.yml/badge.svg)
+![tests](https://github.com/spandanb/textwalker/actions/workflows/publish-package.yml/badge.svg)
+
+[docs](http://www.spandanbemby.com/textwalker/)
+
+`TextWalker` is a simple utility that allows intuitive way to parse unstructured text.
 
 The `TextWalker` API emulates how a complex regular expression is iteratively constructed.
 Typically, when constructing a regex, I'll construct a part of it; test it and build the next part.
@@ -38,49 +44,24 @@ column name is cp_car_make_id
 
 ```
 
+## Installation
+Textwalker is available on PyPI:
+```
+python -m pip install requests
+```
+
 ## Supported Grammar
 ```
 # parse literal
 
+notes: 
+- all patterns must fully match, e.g. pattern = "abcd", and text ="abc" -> ""
+
+limitations
+- no support for predefined char sets
+- charset ranges match depend on how lexical comparison is implemented in python
+- only supports case sensitive search
 ```
 
 
-## Installation
-```
-git clone https://github.com/spandanb/textwalker.git
-cd textwalker
-python -m venv venv
-pip install -r requirements.txt
-python3 setup.py install
-```
-
-### Run Tests
-```
-pytest
-```
-
-### Steps
-generate docs: 
-cd <root>
-pdoc --html --force textwalker
-
-local install
-pip install -e .
-
-
-
-## TODO (MISC)
-- properly define the grammar supported
-- add licensce
-
-## TODO (TECHNICAL)
-- add support for '{}'
-- add support for case (in)sensitive match?
-- add docs
-- cleanup docstrings
-  
-- add tests
-  -- split tests by different grammar being exercized
-- fix setup
-  -- ideally I run setup.py; and tests and examples can then just run
 
