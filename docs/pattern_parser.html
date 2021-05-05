@@ -203,6 +203,7 @@ class PatternParser:
         self.current = 0
         self.pattern = pattern
         self.compiled = None
+        self.compile()
 
     def is_at_end(self) -&gt; bool:
         return self.current &gt;= len(self.pattern)
@@ -262,7 +263,11 @@ class PatternParser:
         return coalesced
 
     def compile(self):
-        self.compiled = self.compile_grouping()
+        &#34;&#34;&#34;
+        compile the user supplied pattern
+        &#34;&#34;&#34;
+        if self.compiled is None:
+            self.compiled = self.compile_grouping()
 
     def compile_grouping(self, is_nested=False) -&gt; Grouping:
         &#34;&#34;&#34;
@@ -869,6 +874,7 @@ if __name__ == &#34;__main__&#34;:
         self.current = 0
         self.pattern = pattern
         self.compiled = None
+        self.compile()
 
     def is_at_end(self) -&gt; bool:
         return self.current &gt;= len(self.pattern)
@@ -928,7 +934,11 @@ if __name__ == &#34;__main__&#34;:
         return coalesced
 
     def compile(self):
-        self.compiled = self.compile_grouping()
+        &#34;&#34;&#34;
+        compile the user supplied pattern
+        &#34;&#34;&#34;
+        if self.compiled is None:
+            self.compiled = self.compile_grouping()
 
     def compile_grouping(self, is_nested=False) -&gt; Grouping:
         &#34;&#34;&#34;
@@ -1431,13 +1441,17 @@ def sufficient_consumed(last_repetition, quantifier: Quantifier) -&gt; bool:
 <span>def <span class="ident">compile</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>compile the user supplied pattern</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def compile(self):
-    self.compiled = self.compile_grouping()</code></pre>
+    &#34;&#34;&#34;
+    compile the user supplied pattern
+    &#34;&#34;&#34;
+    if self.compiled is None:
+        self.compiled = self.compile_grouping()</code></pre>
 </details>
 </dd>
 <dt id="textwalker.pattern_parser.PatternParser.compile_charset"><code class="name flex">

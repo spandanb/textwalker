@@ -26,22 +26,18 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .pattern_parser import PatternParser
-from .textwalker import TextWalker</code></pre>
+<pre><code class="python">from .pattern_parser import PatternParser  # noqa: F401
+from .textwalker import TextWalker  # noqa: F401
+
+__pdoc__ = {}
+__pdoc__[&#39;textwalker.conftest&#39;] = False
+__pdoc__[&#39;textwalker.tests&#39;] = False</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="textwalker.conftest" href="conftest.html">textwalker.conftest</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt><code class="name"><a title="textwalker.pattern_parser" href="pattern_parser.html">textwalker.pattern_parser</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="textwalker.tests" href="tests/index.html">textwalker.tests</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -51,7 +47,7 @@ from .textwalker import TextWalker</code></pre>
 </dd>
 <dt><code class="name"><a title="textwalker.utils" href="utils.html">textwalker.utils</a></code></dt>
 <dd>
-<div class="desc"><p>Utils</p></div>
+<div class="desc"><p>Misc utilities</p></div>
 </dd>
 </dl>
 </section>
@@ -70,9 +66,7 @@ from .textwalker import TextWalker</code></pre>
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="textwalker.conftest" href="conftest.html">textwalker.conftest</a></code></li>
 <li><code><a title="textwalker.pattern_parser" href="pattern_parser.html">textwalker.pattern_parser</a></code></li>
-<li><code><a title="textwalker.tests" href="tests/index.html">textwalker.tests</a></code></li>
 <li><code><a title="textwalker.textwalker" href="textwalker.html">textwalker.textwalker</a></code></li>
 <li><code><a title="textwalker.utils" href="utils.html">textwalker.utils</a></code></li>
 </ul>
