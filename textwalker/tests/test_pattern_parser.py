@@ -30,7 +30,7 @@ def test_literal_empty():
     """
     run_pattern_match(
         [
-            ("", "", None),
+            ("", "", ""),
         ]
     )
 
@@ -48,8 +48,9 @@ def test_literal_single_char():
             ("x", "", None),
             # double escape because single escape, escapes the bracket, which
             # is an invalid escape
-            ("\\(", "(", "(")
+            ("\\(", "(", "("),
             # quantifiers
+            ("b?", "", "")
         ]
     )
 
@@ -66,6 +67,8 @@ def test_literal_multi_char():
             # this may be non-intuitive; but partial matches are not supported
             ("abcd", "abc", None),
             ("abc", "abcd", "abc"),  # longer text
+            # quantifiers
+            ("ab?", "a", "a")
         ]
     )
 
@@ -133,6 +136,10 @@ def test_groups_complex():
             ("(ab)(cd)", "abcd", "abcd"),
             ("((a*b)+)", "bcard", "b"),
             ("((a*b)+)(car)", "bcard", "bcar"),
+            ("(abcd)?(xyz)", "xyz", "xyz"),
+            ("(abcd)?(xyz)?", "abcdxyz", "abcdxyz"),
+            ("(abcd)?(xyz)?", "", "")
+
         ]
     )
 

@@ -1,3 +1,6 @@
+"""
+Contains `TextWalker` class for consuming text
+"""
 from typing import List, Tuple
 from .pattern_parser import PatternParser
 
