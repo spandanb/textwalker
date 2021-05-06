@@ -17,15 +17,6 @@ class UnescapedChar(Exception):
     """
     These represent the constraint that special chars be escaped
     """
-
-    pass
-
-
-class UnescapedDash(UnescapedChar):
-    """
-    A dash character was unescaped
-    """
-
     pass
 
 
@@ -357,7 +348,7 @@ class PatternParser:
                 if is_nested:
                     # this terminates the grouping
                     return self.compile_subgroups(compiled)
-                raise UnescapedChar(")")
+                raise UnescapedChar(ch)
             elif ch == "[":
                 # this will either succeed and consume and return
                 # entire charset, or raise exception
@@ -368,7 +359,7 @@ class PatternParser:
                 # find matchable to attach quantifier to
                 matchable = compiled[-1] if len(compiled) > 0 else None
                 if matchable is None:
-                    raise UnescapedChar
+                    raise UnescapedChar(ch)
                 if ch == "*":
                     matchable.quantifier = ZeroOrMore()
                 elif ch == "+":
@@ -380,12 +371,15 @@ class PatternParser:
                 # this will either succeed and consume the entire quantifier or raise
                 # TODO: implememt me
                 raise NotImplementedError
+            elif ch == '-':
+                # this is an unescaped dash
+                raise UnescapedChar(ch)
             # handle escape char
             elif ch == "\\":
                 next_char = self.advance()
                 if next_char not in ESCAPABLE_CHARS:
                     # NOTE: currently not supporting all escape chars
-                    raise UnrecognizedEscapedChar
+                    raise UnrecognizedEscapedChar(next_char)
                 # add the escaped char as a literal
                 compiled.append(Literal(next_char))
 
@@ -402,7 +396,7 @@ class PatternParser:
 
         grouping = self.compile_subgroups(compiled)
         if not is_nested and not isinstance(grouping, Grouping):
-            # this is the root call- the returned must be wrapped in a grouping
+            # this is the root call- the returned must be wrapped in a Grouping
             grouping = Grouping([grouping])
         return grouping
 
@@ -416,7 +410,7 @@ class PatternParser:
             compiled `Charset`
 
         Raises:
-            - UnclosedSet and unescapedDash
+            - UnclosedSet and UnescapedChar
         """
         result = []
         closed = False  # whether the charset is closed
@@ -435,7 +429,7 @@ class PatternParser:
             if ch == "-":
                 # an unescaped dash, should only appear between a range
                 # this simplifies the case, where it's the first or last char in set
-                raise UnescapedDash
+                raise UnescapedChar(ch)
             if ch == "]":
                 # closing bracket found
                 closed = True
@@ -445,7 +439,7 @@ class PatternParser:
                 if self.has_next() and self.peek() == "-":
                     if not self.has_next_next():
                         # unescaped dash's are only supported in range
-                        raise UnescapedDash
+                        raise UnescapedChar(self.peek())
                     self.advance()  # consume the dash
                     rng_end = self.advance()
                     rng = CharRange(ch, rng_end)
@@ -635,7 +629,6 @@ class PatternMatcher:
                     if not self.sufficient_consumed(
                         sgroup_repetition, subgroup.quantifier
                     ):
-                        # raise MinMatchesNotFound
                         return MatchResult(False)
 
                     sgroup_repetition = 0
@@ -698,6 +691,7 @@ class PatternMatcher:
                 if len(res.content) == 0:
                     break
             else:
+                # sub group did not match
                 sg_matched = False
                 break
 

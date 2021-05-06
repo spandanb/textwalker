@@ -1,14 +1,15 @@
 """
 Contains `TextWalker` class for consuming text
 """
-from typing import List, Tuple
+from typing import List, Optional, Tuple, Union
 from .pattern_parser import PatternParser
 
 
 # commonly used charsets
 NEWLINE = "[\r\n]"
+# NOTE: the blank corresponds to space char
 NEWLINE_WHITESPACE = "[ \r\n\t]"
-WHITESPACE = "[\r\n\t]"
+WHITESPACE = "[ \t]"
 
 
 class TextWalker:
@@ -16,40 +17,47 @@ class TextWalker:
     consumes words one word at a time
     """
 
-    def __init__(
-        self, text: str, word_delim=NEWLINE_WHITESPACE, strict_match: bool = False
-    ):
+    def __init__(self, text: str, word_delim: Union[str, None] = NEWLINE_WHITESPACE):
         """
-        args:
+        Args:
             text: input text to walk
-            word_delim: patterns to additionally consume
-            strict_match: if no match, raises exception;
+            word_delim: Optional list, if set will consume anything that matches this
+                before and after a word match
         """
         self.text = text
         self.textidx = 0
-        # this will be consumed before and after every user specified walk
+        # this will be consumed before and after every user specified walk token
         self.word_delim = word_delim
+        # word delimiter parser
+        self.wd_parser = None
 
-    def walk(self, pattern: str):
+    def word_delim_parser(self) -> PatternParser:
         """
-        consumes the `text` starting at `textidx`, based on the `pattern`
+        cache the parser for the word delim
+        """
+        if self.wd_parser is None:
+            self.wd_parser = PatternParser(self.word_delim)
+        return self.wd_parser
+
+    def walk(self, pattern: str) -> Optional[str]:
+        """
+        Consumes the `text` starting at `textidx`, based on the `pattern`
         updates textidx if text is consumed/matched.
-        if specified, word_delims are also consumed
+        if specified, `word_delims` are also consumed
         """
-        # consume word delim
+        # consume word delimiter
         if self.word_delim is not None:
-            ws_parser = PatternParser(self.word_delim)
+            wd_parser = self.word_delim_parser()
             while True:
-                match = ws_parser.match(self.text, self.textidx)
+                match = wd_parser.match(self.text, self.textidx)
                 if match is None:
                     break
                 self.textidx += len(match)
 
-        pparser = PatternParser(pattern)
-        match = pparser.match(self.text, self.textidx)
+        parser = PatternParser(pattern)
+        match = parser.match(self.text, self.textidx)
         if match is None:
-            print("text walker did not find match")
-            return ""
+            return None
         self.textidx += len(match)
         return match
 
@@ -58,24 +66,23 @@ class TextWalker:
         walk until pattern matches, by iterating by one
         character.
 
-        it's an error to be invoked with a pattern that
-        can resolve to length 0, since it's not clear
-        todo: add support for the above
-
-        returns the pair ( substring upto match, match)
+        Returns:
+            (substring-upto-match(str), match(str))
         """
         startidx = self.textidx
-        pparser = PatternParser(pattern)
+        parser = PatternParser(pattern)
         while self.textidx < len(self.text) - 1:
             # will consume until there is a match
-            match = pparser.match(self.text, self.textidx)
+            match = parser.match(self.text, self.textidx)
             if match is not None:
-                return self.text[startidx : self.textidx], match
+                return self.text[startidx: self.textidx], match
             self.textidx += 1
         return self.text[startidx:], ""
 
     def walk_many(self, patterns: List[str]) -> List[str]:
         """
         walk many tokens
+        Returns:
+            - many tokens
         """
         return [self.walk(pattern) for pattern in patterns]
