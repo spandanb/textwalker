@@ -50,7 +50,7 @@ def test_literal_single_char():
             # is an invalid escape
             ("\\(", "(", "("),
             # quantifiers
-            ("b?", "", "")
+            ("b?", "", ""),
         ]
     )
 
@@ -68,7 +68,7 @@ def test_literal_multi_char():
             ("abcd", "abc", None),
             ("abc", "abcd", "abc"),  # longer text
             # quantifiers
-            ("ab?", "a", "a")
+            ("ab?", "a", "a"),
         ]
     )
 
@@ -138,8 +138,7 @@ def test_groups_complex():
             ("((a*b)+)(car)", "bcard", "bcar"),
             ("(abcd)?(xyz)", "xyz", "xyz"),
             ("(abcd)?(xyz)?", "abcdxyz", "abcdxyz"),
-            ("(abcd)?(xyz)?", "", "")
-
+            ("(abcd)?(xyz)?", "", ""),
         ]
     )
 

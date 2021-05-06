@@ -17,6 +17,7 @@ class UnescapedChar(Exception):
     """
     These represent the constraint that special chars be escaped
     """
+
     pass
 
 
@@ -24,6 +25,7 @@ class UnescapedDash(UnescapedChar):
     """
     A dash character was unescaped
     """
+
     pass
 
 
@@ -31,6 +33,7 @@ class UnrecognizedEscapedChar(Exception):
     """
     This represents that random characters should not be escaped
     """
+
     pass
 
 
@@ -38,6 +41,7 @@ class UnclosedCharSet(Exception):
     """
     A char set was not closed, i.e. missing ']'
     """
+
     pass
 
 
@@ -77,6 +81,7 @@ class ZeroOrOne(Quantifier):
     """
     Represents quantifier zero or one repetitions
     """
+
     def __str__(self):
         return "?"
 
@@ -165,14 +170,15 @@ class MatchResult:
     """
     Result for match
     """
+
     def __init__(self, matched: bool, content: str = ""):
         self.matched = matched
         self.content = content
 
     def __str__(self):
         if self.matched is False:
-            return 'NoMatch'
-        return f'Match({self.content})'
+            return "NoMatch"
+        return f"Match({self.content})"
 
     def __repr__(self):
         return str(self)
@@ -254,7 +260,9 @@ class PatternParser:
         """
 
         coalesced = []
-        partials = []  # partial list of chars that will be coalesced into in a single Literal
+        partials = (
+            []
+        )  # partial list of chars that will be coalesced into in a single Literal
         for idx, token in enumerate(tokens):
             # if quantifier is not None, can't coalesce into one literal
             if isinstance(token, Literal) and token.quantifier is None:
@@ -267,8 +275,11 @@ class PatternParser:
                 partials = []
 
             # add all other tokens, as-is
-            if not isinstance(token, Literal) or \
-                    isinstance(token, Literal) and token.quantifier is not None:
+            if (
+                not isinstance(token, Literal)
+                or isinstance(token, Literal)
+                and token.quantifier is not None
+            ):
                 coalesced.append(token)
 
         if len(partials) > 0:
@@ -464,6 +475,7 @@ class PatternMatcher:
     """
     Encapsulates pattern matching logic
     """
+
     def __init__(self, compiled: Grouping):
         self.compiled = compiled
 
@@ -528,9 +540,7 @@ class PatternMatcher:
         return result
 
     @staticmethod
-    def match_literal(
-        literal: Literal, string: str, stridx: int = 0
-    ) -> MatchResult:
+    def match_literal(literal: Literal, string: str, stridx: int = 0) -> MatchResult:
         """
         Attempt to match a literal
         """
@@ -542,9 +552,7 @@ class PatternMatcher:
         return MatchResult(True, literal.value)
 
     @staticmethod
-    def match_charset(
-        charset: Charset, string: str, stridx: int = 0
-    ) -> MatchResult:
+    def match_charset(charset: Charset, string: str, stridx: int = 0) -> MatchResult:
         """
         Attempt to match a charset
         """
@@ -624,7 +632,9 @@ class PatternMatcher:
                 else:
                     # no match, move to next matchable
                     # check minimum match cond was violated
-                    if not self.sufficient_consumed(sgroup_repetition, subgroup.quantifier):
+                    if not self.sufficient_consumed(
+                        sgroup_repetition, subgroup.quantifier
+                    ):
                         # raise MinMatchesNotFound
                         return MatchResult(False)
 
@@ -694,7 +704,9 @@ class PatternMatcher:
         content = arr2str(matched)
         # the following distinguishes a non-match from an empty match
         # i.e. content length is 0 and the quantifier does not allow a zero match
-        if (len(content) == 0 and sg_matched is False) and self.accepts_empty(grouping.quantifier) is False:
+        if (len(content) == 0 and sg_matched is False) and self.accepts_empty(
+            grouping.quantifier
+        ) is False:
             return MatchResult(False)
 
         return MatchResult(True, content)
