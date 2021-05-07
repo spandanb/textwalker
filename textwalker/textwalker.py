@@ -21,7 +21,7 @@ class TextWalker:
         """
         Args:
             text: input text to walk
-            word_delim: Optional list, if set will consume anything that matches this
+            word_delim: (optional), if set will consume anything that matches this
                 before and after a word match
         """
         self.text = text

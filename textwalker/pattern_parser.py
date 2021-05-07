@@ -24,7 +24,6 @@ class UnrecognizedEscapedChar(Exception):
     """
     This represents that random characters should not be escaped
     """
-
     pass
 
 
@@ -32,9 +31,25 @@ class UnclosedCharSet(Exception):
     """
     A char set was not closed, i.e. missing ']'
     """
-
     pass
 
+
+class UnassociatedQuantifier(Exception):
+    """
+    An unassociated quantifier was found.
+
+    NOTE: This is only raised, e.g. if the pattern was {1,2},
+    but not for other quantifier. This is because the correct
+    error messages, depends on the intentions of the user.
+    From my assessment, a free '+' is likely to be an unescaped
+    char. But '{1,2}' is almost certainly a missing body
+    """
+
+class UnexpectedChar(Exception):
+    """
+    generic exception for unexpected char and where one
+    of the other exceptions doesn't seem appropriate
+    """
 
 # Quantifier classes
 
@@ -43,7 +58,6 @@ class Quantifier:
     """
     base quantifier class
     """
-
     pass
 
 
@@ -75,6 +89,22 @@ class ZeroOrOne(Quantifier):
 
     def __str__(self):
         return "?"
+
+
+class RangeQuantifier(Quantifier):
+    """
+    Defines a inclusive range for the number
+    of repetitions
+    """
+    def __init__(self, lower_bound: int, upper_bound: int):
+        self.lbound = lower_bound
+        self.ubound = upper_bound
+
+    def __str__(self):
+        return f'{{{self.lbound},{self.ubound}}}'
+
+    def __repr__(self):
+        return str(self)
 
 
 class Token:
@@ -367,10 +397,14 @@ class PatternParser:
                 else:
                     assert ch == "?", "unknown quantifier"
                     matchable.quantifier = ZeroOrOne()
-            elif ch == "{":
+            elif ch == "{":  # range quantifier
                 # this will either succeed and consume the entire quantifier or raise
-                # TODO: implememt me
-                raise NotImplementedError
+                range_quantifier = self.compile_range_quantifier()
+                matchable = compiled[-1] if len(compiled) > 0 else None
+                if matchable is None:
+                    # some error
+                    raise UnassociatedQuantifier(str(range_quantifier))
+                matchable.quantifier = range_quantifier
             elif ch == '-':
                 # this is an unescaped dash
                 raise UnescapedChar(ch)
@@ -399,6 +433,40 @@ class PatternParser:
             # this is the root call- the returned must be wrapped in a Grouping
             grouping = Grouping([grouping])
         return grouping
+
+    def compile_range_quantifier(self) -> RangeQuantifier:
+        """
+        Compile a range quantifier, e.g. '{1, 2}'
+        This is invoked after consuming the opening '{'
+        """
+        lower = -1
+        upper = -1
+        chars = []
+        while self.is_at_end() is False:
+            ch = self.advance()
+            if ch.isnumeric():
+                chars.append(ch)
+            elif ch.isspace():
+                pass
+            elif ch == ',':
+                num_str = ''.join(chars)
+                if len(num_str) == 0:
+                    # this expression is ill-formed
+                    raise UnexpectedChar(',', " '{' must be either escaped, or be properly constructed e.g. {M, N}")
+                lower = int(num_str)
+                chars = []
+            elif ch == '}':
+                num_str = ''.join(chars)
+                if len(num_str) == 0:
+                    # this expression is ill-formed;
+                    raise UnexpectedChar(',', " '{' must be either escaped, or be properly constructed e.g. {M, N}")
+                upper = int(num_str)
+                break
+            else:
+                # unexpected char
+                raise UnexpectedChar
+
+        return RangeQuantifier(lower, upper)
 
     def compile_charset(self) -> Charset:
         """
@@ -478,11 +546,15 @@ class PatternMatcher:
         """
         Determines whether the `quantifier` allows consuming another repetition
         NOTE: this should be invoked before consuming
+        to_run_iteration is 0-based
         """
         if isinstance(quantifier, ZeroOrMore) or isinstance(quantifier, OneOrMore):
             return True
         elif isinstance(quantifier, ZeroOrOne):
             return to_run_iteration < 1
+        elif isinstance(quantifier, RangeQuantifier):
+            # NB: quantifier values are 1-based and inclusive, and to_run_iteration is 0-based
+            return to_run_iteration < quantifier.ubound
         elif quantifier is None:
             # interpret None as 1
             return to_run_iteration < 1
@@ -500,6 +572,9 @@ class PatternMatcher:
             return True
         elif isinstance(quantifier, OneOrMore):
             return last_repetition >= 1
+        elif isinstance(quantifier, RangeQuantifier):
+            # NB: quantifier values are 1-based and inclusive, and last_repetition is 0-based
+            return quantifier.lbound <= last_repetition
         elif quantifier is None:
             # TODO: not sure if this correct
             return True

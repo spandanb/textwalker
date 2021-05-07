@@ -1,4 +1,7 @@
+import pytest
+
 from textwalker import PatternParser
+from textwalker.pattern_parser import UnclosedCharSet, UnrecognizedEscapedChar, UnescapedChar, UnassociatedQuantifier, UnexpectedChar
 
 """
 missing dimension of tests:
@@ -17,7 +20,6 @@ def run_pattern_match(test_cases: list):
     """
     for idx, (pattern, match, expected) in enumerate(test_cases):
         pat = PatternParser(pattern)
-        pat.compile()
         result = pat.match(match)
         assert (
             result == expected
@@ -94,7 +96,8 @@ def test_charsets():
         [
             ("[a-z]+", "dat9", "dat"),
             ("[a-z0-9]+", "3a", "3a"),
-            ("[\nx]*", "\nxxxx", "\nxxxx"),
+            ("[\nx]*", "\nxxxx", "\nxxxx"),  # special chars
+            ("[\\[]+", "[[x", "[["), # special chars
         ]
     )
 
@@ -120,6 +123,9 @@ def test_groups_simple():
             # double escape because single escape, escapes the bracket, which
             # is an invalid escape
             ("(\\()", "(", "("),
+            ("(aa)*aa", "aa", None),
+            ("(aa)*aa", "aaaaaa", None),
+            ("(aa){1,2}aa", "aaaaaa", "aaaaaa")
         ]
     )
 
@@ -141,6 +147,25 @@ def test_groups_complex():
             ("(abcd)?(xyz)?", "", ""),
         ]
     )
+
+
+def test_exceptions():
+    """
+    pattern inputs that causes an exception
+    """
+    tests = [
+        ("[", UnclosedCharSet),
+        ("-", UnescapedChar),
+        ("[a-]", UnescapedChar),
+        (r"\a", UnrecognizedEscapedChar),
+        ("\\b", UnrecognizedEscapedChar),
+        ("{1,2}", UnassociatedQuantifier),
+        ("{1-2}", UnexpectedChar)
+    ]
+
+    for pattern, exception in tests:
+        with pytest.raises(exception):
+            PatternParser(pattern)
 
 
 if __name__ == "__main__":
