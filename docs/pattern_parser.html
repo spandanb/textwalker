@@ -30,13 +30,30 @@
 <pre><code class="python">&#34;&#34;&#34;
 Contains classes for parsing pattern and matching text against the pattern
 &#34;&#34;&#34;
-from typing import List, Optional
+from enum import Enum
+from typing import List, Optional, Union
 
 from .utils import arr2str
 
 # Globals
 
-ESCAPABLE_CHARS = {&#34;(&#34;, &#34;)&#34;, &#34;[&#34;, &#34;]&#34;, &#34;{&#34;, &#34;}&#34;, &#34;-&#34;}
+ESCAPABLE_CHARS = {&#34;(&#34;, &#34;)&#34;, &#34;[&#34;, &#34;]&#34;, &#34;{&#34;, &#34;}&#34;, &#34;-&#34;, &#34;+&#34;, &#34;*&#34;, &#34;?&#34;}
+
+# Enums
+
+# R(ange(Quantifier)State explicitly tracks the state of parsing, i.e.
+# which symbolic token is being parsed since interpretation of space character
+# depends on current state.
+# DevNote: This could be achieved via flags that could be used to determine
+# when we&#39;ve reached an invalid state. And in fact, they encode the same thing,
+# the tradeoff is in clarity of intention vs. the more code.
+# states:
+# OpenBrace- the opening &#39;{&#39; is seen but not yet started parsing first num
+# ParsingLower - first lower bound number char has been seen
+# PostLower - lower bound number boundary reached
+# PreUpper - comma has been reached
+# ParsingUpper - first upper bound number char is seen
+RQState = Enum(&#39;State&#39;, &#39;OpenBrace ParsingLower PostLower PreUpper ParsingUpper PostUpper&#39;)
 
 
 # Exceptions
@@ -46,15 +63,6 @@ class UnescapedChar(Exception):
     &#34;&#34;&#34;
     These represent the constraint that special chars be escaped
     &#34;&#34;&#34;
-
-    pass
-
-
-class UnescapedDash(UnescapedChar):
-    &#34;&#34;&#34;
-    A dash character was unescaped
-    &#34;&#34;&#34;
-
     pass
 
 
@@ -62,7 +70,6 @@ class UnrecognizedEscapedChar(Exception):
     &#34;&#34;&#34;
     This represents that random characters should not be escaped
     &#34;&#34;&#34;
-
     pass
 
 
@@ -70,9 +77,26 @@ class UnclosedCharSet(Exception):
     &#34;&#34;&#34;
     A char set was not closed, i.e. missing &#39;]&#39;
     &#34;&#34;&#34;
-
     pass
 
+
+class UnassociatedQuantifier(Exception):
+    &#34;&#34;&#34;
+    An unassociated quantifier was found.
+
+    NOTE: This is only raised, e.g. if the pattern was {1,2},
+    but not for other quantifier. This is because the correct
+    error messages, depends on the intentions of the user.
+    From my assessment, a free &#39;+&#39; is likely to be an unescaped
+    char. But &#39;{1,2}&#39; is almost certainly a missing body
+    &#34;&#34;&#34;
+
+
+class UnexpectedChar(Exception):
+    &#34;&#34;&#34;
+    generic exception for unexpected char and where one
+    of the other exceptions doesn&#39;t seem appropriate
+    &#34;&#34;&#34;
 
 # Quantifier classes
 
@@ -81,7 +105,6 @@ class Quantifier:
     &#34;&#34;&#34;
     base quantifier class
     &#34;&#34;&#34;
-
     pass
 
 
@@ -113,6 +136,22 @@ class ZeroOrOne(Quantifier):
 
     def __str__(self):
         return &#34;?&#34;
+
+
+class RangeQuantifier(Quantifier):
+    &#34;&#34;&#34;
+    Defines a inclusive range for the number
+    of repetitions
+    &#34;&#34;&#34;
+    def __init__(self, lower_bound: int, upper_bound: int):
+        self.lbound = lower_bound
+        self.ubound = upper_bound
+
+    def __str__(self):
+        return f&#39;{{{self.lbound},{self.ubound}}}&#39;
+
+    def __repr__(self):
+        return str(self)
 
 
 class Token:
@@ -275,6 +314,17 @@ class PatternParser:
         return self.pattern[self.current + 2]
 
     @staticmethod
+    def try_chars_to_num(chars: List[str]) -&gt; Optional[int]:
+        &#34;&#34;&#34;
+        Attempt to parse a list of numeric chars into an int;
+        if input is empty, returns None
+        &#34;&#34;&#34;
+        num_str = &#39;&#39;.join(chars)
+        if len(num_str) == 0:
+            return None
+        return int(num_str)
+
+    @staticmethod
     def coalesce_literals(tokens: List[Token]) -&gt; List[Token]:
         &#34;&#34;&#34;
         Combine adjacent literal chars with no quantifier into a literal word;
@@ -386,7 +436,7 @@ class PatternParser:
                 if is_nested:
                     # this terminates the grouping
                     return self.compile_subgroups(compiled)
-                raise UnescapedChar(&#34;)&#34;)
+                raise UnescapedChar(ch)
             elif ch == &#34;[&#34;:
                 # this will either succeed and consume and return
                 # entire charset, or raise exception
@@ -397,7 +447,7 @@ class PatternParser:
                 # find matchable to attach quantifier to
                 matchable = compiled[-1] if len(compiled) &gt; 0 else None
                 if matchable is None:
-                    raise UnescapedChar
+                    raise UnescapedChar(ch)
                 if ch == &#34;*&#34;:
                     matchable.quantifier = ZeroOrMore()
                 elif ch == &#34;+&#34;:
@@ -405,16 +455,23 @@ class PatternParser:
                 else:
                     assert ch == &#34;?&#34;, &#34;unknown quantifier&#34;
                     matchable.quantifier = ZeroOrOne()
-            elif ch == &#34;{&#34;:
+            elif ch == &#34;{&#34;:  # range quantifier
                 # this will either succeed and consume the entire quantifier or raise
-                # TODO: implememt me
-                raise NotImplementedError
+                range_quantifier = self.compile_range_quantifier()
+                matchable = compiled[-1] if len(compiled) &gt; 0 else None
+                if matchable is None:
+                    # some error
+                    raise UnassociatedQuantifier(str(range_quantifier))
+                matchable.quantifier = range_quantifier
+            elif ch == &#39;-&#39;:
+                # this is an unescaped dash
+                raise UnescapedChar(ch)
             # handle escape char
             elif ch == &#34;\\&#34;:
                 next_char = self.advance()
                 if next_char not in ESCAPABLE_CHARS:
                     # NOTE: currently not supporting all escape chars
-                    raise UnrecognizedEscapedChar
+                    raise UnrecognizedEscapedChar(next_char)
                 # add the escaped char as a literal
                 compiled.append(Literal(next_char))
 
@@ -431,9 +488,62 @@ class PatternParser:
 
         grouping = self.compile_subgroups(compiled)
         if not is_nested and not isinstance(grouping, Grouping):
-            # this is the root call- the returned must be wrapped in a grouping
+            # this is the root call- the returned must be wrapped in a Grouping
             grouping = Grouping([grouping])
         return grouping
+
+    def compile_range_quantifier(self) -&gt; RangeQuantifier:
+        &#34;&#34;&#34;
+        Compile a range quantifier, e.g. &#39;{1, 2}&#39;
+        This is invoked after consuming the opening &#39;{&#39;
+        &#34;&#34;&#34;
+        current = RQState.OpenBrace
+        lower = -1
+        upper = -1
+        chars = []  # number chars
+        while self.is_at_end() is False:
+            ch = self.advance()
+            if ch.isnumeric():
+                chars.append(ch)
+                if current == RQState.OpenBrace:
+                    current = RQState.ParsingLower
+                elif current == RQState.PostLower or current == RQState.PostUpper:
+                    # error: a number&#39;s word boundary was already reached
+                    # there is a break between numeric characters
+                    raise UnexpectedChar(ch, &#34;Invalid quantifier range&#34;)
+                elif current == RQState.PreUpper:
+                    current = RQState.ParsingUpper
+            elif ch.isspace():
+                # how to interpret a space depends on what is being parsed
+                if current == RQState.OpenBrace:
+                    continue   # skip leading space
+                elif current == RQState.ParsingLower:
+                    # this is a word boundary
+                    lower = self.try_chars_to_num(chars)
+                    if lower is None:
+                        raise UnexpectedChar(&#34;Unexpected space character word boundary; Invalid quantifier range&#34;)
+                    chars = []
+                    current = RQState.PostLower
+                elif current == RQState.ParsingUpper:
+                    current = RQState.PostUpper
+            elif ch == &#39;,&#39;:
+                current = RQState.PreUpper
+                # the first word
+                lower = self.try_chars_to_num(chars)
+                if lower is None:
+                    # ill formed expression
+                    raise UnexpectedChar(&#39;,&#39;, &#34; &#39;{&#39; must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range&#34;)  # noqa E501
+                chars = []
+            elif ch == &#39;}&#39;:
+                upper = self.try_chars_to_num(chars)
+                if upper is None:
+                    raise UnexpectedChar(&#39;,&#39;, &#34; &#39;{&#39; must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range&#34;)  # noqa E501
+                break
+            else:
+                # unexpected char
+                raise UnexpectedChar
+
+        return RangeQuantifier(lower, upper)
 
     def compile_charset(self) -&gt; Charset:
         &#34;&#34;&#34;
@@ -445,7 +555,7 @@ class PatternParser:
             compiled `Charset`
 
         Raises:
-            - UnclosedSet and unescapedDash
+            - UnclosedSet and UnescapedChar
         &#34;&#34;&#34;
         result = []
         closed = False  # whether the charset is closed
@@ -464,7 +574,7 @@ class PatternParser:
             if ch == &#34;-&#34;:
                 # an unescaped dash, should only appear between a range
                 # this simplifies the case, where it&#39;s the first or last char in set
-                raise UnescapedDash
+                raise UnescapedChar(ch)
             if ch == &#34;]&#34;:
                 # closing bracket found
                 closed = True
@@ -474,7 +584,7 @@ class PatternParser:
                 if self.has_next() and self.peek() == &#34;-&#34;:
                     if not self.has_next_next():
                         # unescaped dash&#39;s are only supported in range
-                        raise UnescapedDash
+                        raise UnescapedChar(self.peek())
                     self.advance()  # consume the dash
                     rng_end = self.advance()
                     rng = CharRange(ch, rng_end)
@@ -513,11 +623,15 @@ class PatternMatcher:
         &#34;&#34;&#34;
         Determines whether the `quantifier` allows consuming another repetition
         NOTE: this should be invoked before consuming
+        to_run_iteration is 0-based
         &#34;&#34;&#34;
         if isinstance(quantifier, ZeroOrMore) or isinstance(quantifier, OneOrMore):
             return True
         elif isinstance(quantifier, ZeroOrOne):
             return to_run_iteration &lt; 1
+        elif isinstance(quantifier, RangeQuantifier):
+            # NB: quantifier values are 1-based and inclusive, and to_run_iteration is 0-based
+            return to_run_iteration &lt; quantifier.ubound
         elif quantifier is None:
             # interpret None as 1
             return to_run_iteration &lt; 1
@@ -535,6 +649,9 @@ class PatternMatcher:
             return True
         elif isinstance(quantifier, OneOrMore):
             return last_repetition &gt;= 1
+        elif isinstance(quantifier, RangeQuantifier):
+            # NB: quantifier values are 1-based and inclusive, and last_repetition is 0-based
+            return quantifier.lbound &lt;= last_repetition
         elif quantifier is None:
             # TODO: not sure if this correct
             return True
@@ -664,7 +781,6 @@ class PatternMatcher:
                     if not self.sufficient_consumed(
                         sgroup_repetition, subgroup.quantifier
                     ):
-                        # raise MinMatchesNotFound
                         return MatchResult(False)
 
                     sgroup_repetition = 0
@@ -727,6 +843,7 @@ class PatternMatcher:
                 if len(res.content) == 0:
                     break
             else:
+                # sub group did not match
                 sg_matched = False
                 break
 
@@ -969,11 +1086,15 @@ class PatternMatcher:
         &#34;&#34;&#34;
         Determines whether the `quantifier` allows consuming another repetition
         NOTE: this should be invoked before consuming
+        to_run_iteration is 0-based
         &#34;&#34;&#34;
         if isinstance(quantifier, ZeroOrMore) or isinstance(quantifier, OneOrMore):
             return True
         elif isinstance(quantifier, ZeroOrOne):
             return to_run_iteration &lt; 1
+        elif isinstance(quantifier, RangeQuantifier):
+            # NB: quantifier values are 1-based and inclusive, and to_run_iteration is 0-based
+            return to_run_iteration &lt; quantifier.ubound
         elif quantifier is None:
             # interpret None as 1
             return to_run_iteration &lt; 1
@@ -991,6 +1112,9 @@ class PatternMatcher:
             return True
         elif isinstance(quantifier, OneOrMore):
             return last_repetition &gt;= 1
+        elif isinstance(quantifier, RangeQuantifier):
+            # NB: quantifier values are 1-based and inclusive, and last_repetition is 0-based
+            return quantifier.lbound &lt;= last_repetition
         elif quantifier is None:
             # TODO: not sure if this correct
             return True
@@ -1120,7 +1244,6 @@ class PatternMatcher:
                     if not self.sufficient_consumed(
                         sgroup_repetition, subgroup.quantifier
                     ):
-                        # raise MinMatchesNotFound
                         return MatchResult(False)
 
                     sgroup_repetition = 0
@@ -1183,6 +1306,7 @@ class PatternMatcher:
                 if len(res.content) == 0:
                     break
             else:
+                # sub group did not match
                 sg_matched = False
                 break
 
@@ -1237,7 +1361,8 @@ def accepts_empty(quantifier: Quantifier) -&gt; bool:
 </code></dt>
 <dd>
 <div class="desc"><p>Determines whether the <code>quantifier</code> allows consuming another repetition
-NOTE: this should be invoked before consuming</p></div>
+NOTE: this should be invoked before consuming
+to_run_iteration is 0-based</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1247,11 +1372,15 @@ def can_consume(to_run_iteration: int, quantifier: Quantifier) -&gt; bool:
     &#34;&#34;&#34;
     Determines whether the `quantifier` allows consuming another repetition
     NOTE: this should be invoked before consuming
+    to_run_iteration is 0-based
     &#34;&#34;&#34;
     if isinstance(quantifier, ZeroOrMore) or isinstance(quantifier, OneOrMore):
         return True
     elif isinstance(quantifier, ZeroOrOne):
         return to_run_iteration &lt; 1
+    elif isinstance(quantifier, RangeQuantifier):
+        # NB: quantifier values are 1-based and inclusive, and to_run_iteration is 0-based
+        return to_run_iteration &lt; quantifier.ubound
     elif quantifier is None:
         # interpret None as 1
         return to_run_iteration &lt; 1
@@ -1334,6 +1463,9 @@ def sufficient_consumed(last_repetition: int, quantifier: Quantifier) -&gt; bool
         return True
     elif isinstance(quantifier, OneOrMore):
         return last_repetition &gt;= 1
+    elif isinstance(quantifier, RangeQuantifier):
+        # NB: quantifier values are 1-based and inclusive, and last_repetition is 0-based
+        return quantifier.lbound &lt;= last_repetition
     elif quantifier is None:
         # TODO: not sure if this correct
         return True
@@ -1484,6 +1616,7 @@ zero matches. Thus all matching handlers must handle zero-length input string</p
             if len(res.content) == 0:
                 break
         else:
+            # sub group did not match
             sg_matched = False
             break
 
@@ -1569,7 +1702,6 @@ zero matches. Thus all matching handlers must handle zero-length input string</p
                 if not self.sufficient_consumed(
                     sgroup_repetition, subgroup.quantifier
                 ):
-                    # raise MinMatchesNotFound
                     return MatchResult(False)
 
                 sgroup_repetition = 0
@@ -1663,6 +1795,17 @@ zero matches. Thus all matching handlers must handle zero-length input string</p
         NOTE: This call is only valid if `has_next_next` is True
         &#34;&#34;&#34;
         return self.pattern[self.current + 2]
+
+    @staticmethod
+    def try_chars_to_num(chars: List[str]) -&gt; Optional[int]:
+        &#34;&#34;&#34;
+        Attempt to parse a list of numeric chars into an int;
+        if input is empty, returns None
+        &#34;&#34;&#34;
+        num_str = &#39;&#39;.join(chars)
+        if len(num_str) == 0:
+            return None
+        return int(num_str)
 
     @staticmethod
     def coalesce_literals(tokens: List[Token]) -&gt; List[Token]:
@@ -1776,7 +1919,7 @@ zero matches. Thus all matching handlers must handle zero-length input string</p
                 if is_nested:
                     # this terminates the grouping
                     return self.compile_subgroups(compiled)
-                raise UnescapedChar(&#34;)&#34;)
+                raise UnescapedChar(ch)
             elif ch == &#34;[&#34;:
                 # this will either succeed and consume and return
                 # entire charset, or raise exception
@@ -1787,7 +1930,7 @@ zero matches. Thus all matching handlers must handle zero-length input string</p
                 # find matchable to attach quantifier to
                 matchable = compiled[-1] if len(compiled) &gt; 0 else None
                 if matchable is None:
-                    raise UnescapedChar
+                    raise UnescapedChar(ch)
                 if ch == &#34;*&#34;:
                     matchable.quantifier = ZeroOrMore()
                 elif ch == &#34;+&#34;:
@@ -1795,16 +1938,23 @@ zero matches. Thus all matching handlers must handle zero-length input string</p
                 else:
                     assert ch == &#34;?&#34;, &#34;unknown quantifier&#34;
                     matchable.quantifier = ZeroOrOne()
-            elif ch == &#34;{&#34;:
+            elif ch == &#34;{&#34;:  # range quantifier
                 # this will either succeed and consume the entire quantifier or raise
-                # TODO: implememt me
-                raise NotImplementedError
+                range_quantifier = self.compile_range_quantifier()
+                matchable = compiled[-1] if len(compiled) &gt; 0 else None
+                if matchable is None:
+                    # some error
+                    raise UnassociatedQuantifier(str(range_quantifier))
+                matchable.quantifier = range_quantifier
+            elif ch == &#39;-&#39;:
+                # this is an unescaped dash
+                raise UnescapedChar(ch)
             # handle escape char
             elif ch == &#34;\\&#34;:
                 next_char = self.advance()
                 if next_char not in ESCAPABLE_CHARS:
                     # NOTE: currently not supporting all escape chars
-                    raise UnrecognizedEscapedChar
+                    raise UnrecognizedEscapedChar(next_char)
                 # add the escaped char as a literal
                 compiled.append(Literal(next_char))
 
@@ -1821,9 +1971,62 @@ zero matches. Thus all matching handlers must handle zero-length input string</p
 
         grouping = self.compile_subgroups(compiled)
         if not is_nested and not isinstance(grouping, Grouping):
-            # this is the root call- the returned must be wrapped in a grouping
+            # this is the root call- the returned must be wrapped in a Grouping
             grouping = Grouping([grouping])
         return grouping
+
+    def compile_range_quantifier(self) -&gt; RangeQuantifier:
+        &#34;&#34;&#34;
+        Compile a range quantifier, e.g. &#39;{1, 2}&#39;
+        This is invoked after consuming the opening &#39;{&#39;
+        &#34;&#34;&#34;
+        current = RQState.OpenBrace
+        lower = -1
+        upper = -1
+        chars = []  # number chars
+        while self.is_at_end() is False:
+            ch = self.advance()
+            if ch.isnumeric():
+                chars.append(ch)
+                if current == RQState.OpenBrace:
+                    current = RQState.ParsingLower
+                elif current == RQState.PostLower or current == RQState.PostUpper:
+                    # error: a number&#39;s word boundary was already reached
+                    # there is a break between numeric characters
+                    raise UnexpectedChar(ch, &#34;Invalid quantifier range&#34;)
+                elif current == RQState.PreUpper:
+                    current = RQState.ParsingUpper
+            elif ch.isspace():
+                # how to interpret a space depends on what is being parsed
+                if current == RQState.OpenBrace:
+                    continue   # skip leading space
+                elif current == RQState.ParsingLower:
+                    # this is a word boundary
+                    lower = self.try_chars_to_num(chars)
+                    if lower is None:
+                        raise UnexpectedChar(&#34;Unexpected space character word boundary; Invalid quantifier range&#34;)
+                    chars = []
+                    current = RQState.PostLower
+                elif current == RQState.ParsingUpper:
+                    current = RQState.PostUpper
+            elif ch == &#39;,&#39;:
+                current = RQState.PreUpper
+                # the first word
+                lower = self.try_chars_to_num(chars)
+                if lower is None:
+                    # ill formed expression
+                    raise UnexpectedChar(&#39;,&#39;, &#34; &#39;{&#39; must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range&#34;)  # noqa E501
+                chars = []
+            elif ch == &#39;}&#39;:
+                upper = self.try_chars_to_num(chars)
+                if upper is None:
+                    raise UnexpectedChar(&#39;,&#39;, &#34; &#39;{&#39; must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range&#34;)  # noqa E501
+                break
+            else:
+                # unexpected char
+                raise UnexpectedChar
+
+        return RangeQuantifier(lower, upper)
 
     def compile_charset(self) -&gt; Charset:
         &#34;&#34;&#34;
@@ -1835,7 +2038,7 @@ zero matches. Thus all matching handlers must handle zero-length input string</p
             compiled `Charset`
 
         Raises:
-            - UnclosedSet and unescapedDash
+            - UnclosedSet and UnescapedChar
         &#34;&#34;&#34;
         result = []
         closed = False  # whether the charset is closed
@@ -1854,7 +2057,7 @@ zero matches. Thus all matching handlers must handle zero-length input string</p
             if ch == &#34;-&#34;:
                 # an unescaped dash, should only appear between a range
                 # this simplifies the case, where it&#39;s the first or last char in set
-                raise UnescapedDash
+                raise UnescapedChar(ch)
             if ch == &#34;]&#34;:
                 # closing bracket found
                 closed = True
@@ -1864,7 +2067,7 @@ zero matches. Thus all matching handlers must handle zero-length input string</p
                 if self.has_next() and self.peek() == &#34;-&#34;:
                     if not self.has_next_next():
                         # unescaped dash&#39;s are only supported in range
-                        raise UnescapedDash
+                        raise UnescapedChar(self.peek())
                     self.advance()  # consume the dash
                     rng_end = self.advance()
                     rng = CharRange(ch, rng_end)
@@ -1950,6 +2153,28 @@ def coalesce_literals(tokens: List[Token]) -&gt; List[Token]:
     return coalesced</code></pre>
 </details>
 </dd>
+<dt id="textwalker.pattern_parser.PatternParser.try_chars_to_num"><code class="name flex">
+<span>def <span class="ident">try_chars_to_num</span></span>(<span>chars: List[str]) ‑> Union[int, NoneType]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Attempt to parse a list of numeric chars into an int;
+if input is empty, returns None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def try_chars_to_num(chars: List[str]) -&gt; Optional[int]:
+    &#34;&#34;&#34;
+    Attempt to parse a list of numeric chars into an int;
+    if input is empty, returns None
+    &#34;&#34;&#34;
+    num_str = &#39;&#39;.join(chars)
+    if len(num_str) == 0:
+        return None
+    return int(num_str)</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -2001,7 +2226,7 @@ in between.</p>
 <p>compiled <code><a title="textwalker.pattern_parser.Charset" href="#textwalker.pattern_parser.Charset">Charset</a></code></p>
 <h2 id="raises">Raises</h2>
 <ul>
-<li>UnclosedSet and unescapedDash</li>
+<li>UnclosedSet and UnescapedChar</li>
 </ul></div>
 <details class="source">
 <summary>
@@ -2017,7 +2242,7 @@ in between.</p>
         compiled `Charset`
 
     Raises:
-        - UnclosedSet and unescapedDash
+        - UnclosedSet and UnescapedChar
     &#34;&#34;&#34;
     result = []
     closed = False  # whether the charset is closed
@@ -2036,7 +2261,7 @@ in between.</p>
         if ch == &#34;-&#34;:
             # an unescaped dash, should only appear between a range
             # this simplifies the case, where it&#39;s the first or last char in set
-            raise UnescapedDash
+            raise UnescapedChar(ch)
         if ch == &#34;]&#34;:
             # closing bracket found
             closed = True
@@ -2046,7 +2271,7 @@ in between.</p>
             if self.has_next() and self.peek() == &#34;-&#34;:
                 if not self.has_next_next():
                     # unescaped dash&#39;s are only supported in range
-                    raise UnescapedDash
+                    raise UnescapedChar(self.peek())
                 self.advance()  # consume the dash
                 rng_end = self.advance()
                 rng = CharRange(ch, rng_end)
@@ -2135,7 +2360,7 @@ object; for a non-root call this could be any other <code><a title="textwalker.p
             if is_nested:
                 # this terminates the grouping
                 return self.compile_subgroups(compiled)
-            raise UnescapedChar(&#34;)&#34;)
+            raise UnescapedChar(ch)
         elif ch == &#34;[&#34;:
             # this will either succeed and consume and return
             # entire charset, or raise exception
@@ -2146,7 +2371,7 @@ object; for a non-root call this could be any other <code><a title="textwalker.p
             # find matchable to attach quantifier to
             matchable = compiled[-1] if len(compiled) &gt; 0 else None
             if matchable is None:
-                raise UnescapedChar
+                raise UnescapedChar(ch)
             if ch == &#34;*&#34;:
                 matchable.quantifier = ZeroOrMore()
             elif ch == &#34;+&#34;:
@@ -2154,16 +2379,23 @@ object; for a non-root call this could be any other <code><a title="textwalker.p
             else:
                 assert ch == &#34;?&#34;, &#34;unknown quantifier&#34;
                 matchable.quantifier = ZeroOrOne()
-        elif ch == &#34;{&#34;:
+        elif ch == &#34;{&#34;:  # range quantifier
             # this will either succeed and consume the entire quantifier or raise
-            # TODO: implememt me
-            raise NotImplementedError
+            range_quantifier = self.compile_range_quantifier()
+            matchable = compiled[-1] if len(compiled) &gt; 0 else None
+            if matchable is None:
+                # some error
+                raise UnassociatedQuantifier(str(range_quantifier))
+            matchable.quantifier = range_quantifier
+        elif ch == &#39;-&#39;:
+            # this is an unescaped dash
+            raise UnescapedChar(ch)
         # handle escape char
         elif ch == &#34;\\&#34;:
             next_char = self.advance()
             if next_char not in ESCAPABLE_CHARS:
                 # NOTE: currently not supporting all escape chars
-                raise UnrecognizedEscapedChar
+                raise UnrecognizedEscapedChar(next_char)
             # add the escaped char as a literal
             compiled.append(Literal(next_char))
 
@@ -2180,9 +2412,73 @@ object; for a non-root call this could be any other <code><a title="textwalker.p
 
     grouping = self.compile_subgroups(compiled)
     if not is_nested and not isinstance(grouping, Grouping):
-        # this is the root call- the returned must be wrapped in a grouping
+        # this is the root call- the returned must be wrapped in a Grouping
         grouping = Grouping([grouping])
     return grouping</code></pre>
+</details>
+</dd>
+<dt id="textwalker.pattern_parser.PatternParser.compile_range_quantifier"><code class="name flex">
+<span>def <span class="ident">compile_range_quantifier</span></span>(<span>self) ‑> <a title="textwalker.pattern_parser.RangeQuantifier" href="#textwalker.pattern_parser.RangeQuantifier">RangeQuantifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compile a range quantifier, e.g. '{1, 2}'
+This is invoked after consuming the opening '{'</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compile_range_quantifier(self) -&gt; RangeQuantifier:
+    &#34;&#34;&#34;
+    Compile a range quantifier, e.g. &#39;{1, 2}&#39;
+    This is invoked after consuming the opening &#39;{&#39;
+    &#34;&#34;&#34;
+    current = RQState.OpenBrace
+    lower = -1
+    upper = -1
+    chars = []  # number chars
+    while self.is_at_end() is False:
+        ch = self.advance()
+        if ch.isnumeric():
+            chars.append(ch)
+            if current == RQState.OpenBrace:
+                current = RQState.ParsingLower
+            elif current == RQState.PostLower or current == RQState.PostUpper:
+                # error: a number&#39;s word boundary was already reached
+                # there is a break between numeric characters
+                raise UnexpectedChar(ch, &#34;Invalid quantifier range&#34;)
+            elif current == RQState.PreUpper:
+                current = RQState.ParsingUpper
+        elif ch.isspace():
+            # how to interpret a space depends on what is being parsed
+            if current == RQState.OpenBrace:
+                continue   # skip leading space
+            elif current == RQState.ParsingLower:
+                # this is a word boundary
+                lower = self.try_chars_to_num(chars)
+                if lower is None:
+                    raise UnexpectedChar(&#34;Unexpected space character word boundary; Invalid quantifier range&#34;)
+                chars = []
+                current = RQState.PostLower
+            elif current == RQState.ParsingUpper:
+                current = RQState.PostUpper
+        elif ch == &#39;,&#39;:
+            current = RQState.PreUpper
+            # the first word
+            lower = self.try_chars_to_num(chars)
+            if lower is None:
+                # ill formed expression
+                raise UnexpectedChar(&#39;,&#39;, &#34; &#39;{&#39; must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range&#34;)  # noqa E501
+            chars = []
+        elif ch == &#39;}&#39;:
+            upper = self.try_chars_to_num(chars)
+            if upper is None:
+                raise UnexpectedChar(&#39;,&#39;, &#34; &#39;{&#39; must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range&#34;)  # noqa E501
+            break
+        else:
+            # unexpected char
+            raise UnexpectedChar
+
+    return RangeQuantifier(lower, upper)</code></pre>
 </details>
 </dd>
 <dt id="textwalker.pattern_parser.PatternParser.compile_subgroups"><code class="name flex">
@@ -2365,15 +2661,84 @@ NOTE: This call is only valid if <code>has_next_next</code> is True</p></div>
     &#34;&#34;&#34;
     base quantifier class
     &#34;&#34;&#34;
-
     pass</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="textwalker.pattern_parser.OneOrMore" href="#textwalker.pattern_parser.OneOrMore">OneOrMore</a></li>
+<li><a title="textwalker.pattern_parser.RangeQuantifier" href="#textwalker.pattern_parser.RangeQuantifier">RangeQuantifier</a></li>
 <li><a title="textwalker.pattern_parser.ZeroOrMore" href="#textwalker.pattern_parser.ZeroOrMore">ZeroOrMore</a></li>
 <li><a title="textwalker.pattern_parser.ZeroOrOne" href="#textwalker.pattern_parser.ZeroOrOne">ZeroOrOne</a></li>
 </ul>
+</dd>
+<dt id="textwalker.pattern_parser.RangeQuantifier"><code class="flex name class">
+<span>class <span class="ident">RangeQuantifier</span></span>
+<span>(</span><span>lower_bound: int, upper_bound: int)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Defines a inclusive range for the number
+of repetitions</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RangeQuantifier(Quantifier):
+    &#34;&#34;&#34;
+    Defines a inclusive range for the number
+    of repetitions
+    &#34;&#34;&#34;
+    def __init__(self, lower_bound: int, upper_bound: int):
+        self.lbound = lower_bound
+        self.ubound = upper_bound
+
+    def __str__(self):
+        return f&#39;{{{self.lbound},{self.ubound}}}&#39;
+
+    def __repr__(self):
+        return str(self)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="textwalker.pattern_parser.Quantifier" href="#textwalker.pattern_parser.Quantifier">Quantifier</a></li>
+</ul>
+</dd>
+<dt id="textwalker.pattern_parser.State"><code class="flex name class">
+<span>class <span class="ident">RQState</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An enumeration.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="textwalker.pattern_parser.State.OpenBrace"><code class="name">var <span class="ident">OpenBrace</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="textwalker.pattern_parser.State.ParsingLower"><code class="name">var <span class="ident">ParsingLower</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="textwalker.pattern_parser.State.ParsingUpper"><code class="name">var <span class="ident">ParsingUpper</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="textwalker.pattern_parser.State.PostLower"><code class="name">var <span class="ident">PostLower</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="textwalker.pattern_parser.State.PostUpper"><code class="name">var <span class="ident">PostUpper</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="textwalker.pattern_parser.State.PreUpper"><code class="name">var <span class="ident">PreUpper</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 </dd>
 <dt id="textwalker.pattern_parser.Token"><code class="flex name class">
 <span>class <span class="ident">Token</span></span>
@@ -2401,6 +2766,38 @@ NOTE: This call is only valid if <code>has_next_next</code> is True</p></div>
 <li><a title="textwalker.pattern_parser.Literal" href="#textwalker.pattern_parser.Literal">Literal</a></li>
 </ul>
 </dd>
+<dt id="textwalker.pattern_parser.UnassociatedQuantifier"><code class="flex name class">
+<span>class <span class="ident">UnassociatedQuantifier</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An unassociated quantifier was found.</p>
+<p>NOTE: This is only raised, e.g. if the pattern was {1,2},
+but not for other quantifier. This is because the correct
+error messages, depends on the intentions of the user.
+From my assessment, a free '+' is likely to be an unescaped
+char. But '{1,2}' is almost certainly a missing body</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class UnassociatedQuantifier(Exception):
+    &#34;&#34;&#34;
+    An unassociated quantifier was found.
+
+    NOTE: This is only raised, e.g. if the pattern was {1,2},
+    but not for other quantifier. This is because the correct
+    error messages, depends on the intentions of the user.
+    From my assessment, a free &#39;+&#39; is likely to be an unescaped
+    char. But &#39;{1,2}&#39; is almost certainly a missing body
+    &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
 <dt id="textwalker.pattern_parser.UnclosedCharSet"><code class="flex name class">
 <span>class <span class="ident">UnclosedCharSet</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -2415,7 +2812,6 @@ NOTE: This call is only valid if <code>has_next_next</code> is True</p></div>
     &#34;&#34;&#34;
     A char set was not closed, i.e. missing &#39;]&#39;
     &#34;&#34;&#34;
-
     pass</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2438,7 +2834,6 @@ NOTE: This call is only valid if <code>has_next_next</code> is True</p></div>
     &#34;&#34;&#34;
     These represent the constraint that special chars be escaped
     &#34;&#34;&#34;
-
     pass</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2446,31 +2841,26 @@ NOTE: This call is only valid if <code>has_next_next</code> is True</p></div>
 <li>builtins.Exception</li>
 <li>builtins.BaseException</li>
 </ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="textwalker.pattern_parser.UnescapedDash" href="#textwalker.pattern_parser.UnescapedDash">UnescapedDash</a></li>
-</ul>
 </dd>
-<dt id="textwalker.pattern_parser.UnescapedDash"><code class="flex name class">
-<span>class <span class="ident">UnescapedDash</span></span>
+<dt id="textwalker.pattern_parser.UnexpectedChar"><code class="flex name class">
+<span>class <span class="ident">UnexpectedChar</span></span>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A dash character was unescaped</p></div>
+<div class="desc"><p>generic exception for unexpected char and where one
+of the other exceptions doesn't seem appropriate</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class UnescapedDash(UnescapedChar):
+<pre><code class="python">class UnexpectedChar(Exception):
     &#34;&#34;&#34;
-    A dash character was unescaped
-    &#34;&#34;&#34;
-
-    pass</code></pre>
+    generic exception for unexpected char and where one
+    of the other exceptions doesn&#39;t seem appropriate
+    &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="textwalker.pattern_parser.UnescapedChar" href="#textwalker.pattern_parser.UnescapedChar">UnescapedChar</a></li>
 <li>builtins.Exception</li>
 <li>builtins.BaseException</li>
 </ul>
@@ -2489,7 +2879,6 @@ NOTE: This call is only valid if <code>has_next_next</code> is True</p></div>
     &#34;&#34;&#34;
     This represents that random characters should not be escaped
     &#34;&#34;&#34;
-
     pass</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2587,12 +2976,13 @@ NOTE: This call is only valid if <code>has_next_next</code> is True</p></div>
 </li>
 <li>
 <h4><code><a title="textwalker.pattern_parser.PatternParser" href="#textwalker.pattern_parser.PatternParser">PatternParser</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="textwalker.pattern_parser.PatternParser.advance" href="#textwalker.pattern_parser.PatternParser.advance">advance</a></code></li>
 <li><code><a title="textwalker.pattern_parser.PatternParser.coalesce_literals" href="#textwalker.pattern_parser.PatternParser.coalesce_literals">coalesce_literals</a></code></li>
 <li><code><a title="textwalker.pattern_parser.PatternParser.compile" href="#textwalker.pattern_parser.PatternParser.compile">compile</a></code></li>
 <li><code><a title="textwalker.pattern_parser.PatternParser.compile_charset" href="#textwalker.pattern_parser.PatternParser.compile_charset">compile_charset</a></code></li>
 <li><code><a title="textwalker.pattern_parser.PatternParser.compile_grouping" href="#textwalker.pattern_parser.PatternParser.compile_grouping">compile_grouping</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.compile_range_quantifier" href="#textwalker.pattern_parser.PatternParser.compile_range_quantifier">compile_range_quantifier</a></code></li>
 <li><code><a title="textwalker.pattern_parser.PatternParser.compile_subgroups" href="#textwalker.pattern_parser.PatternParser.compile_subgroups">compile_subgroups</a></code></li>
 <li><code><a title="textwalker.pattern_parser.PatternParser.has_next" href="#textwalker.pattern_parser.PatternParser.has_next">has_next</a></code></li>
 <li><code><a title="textwalker.pattern_parser.PatternParser.has_next_next" href="#textwalker.pattern_parser.PatternParser.has_next_next">has_next_next</a></code></li>
@@ -2601,13 +2991,31 @@ NOTE: This call is only valid if <code>has_next_next</code> is True</p></div>
 <li><code><a title="textwalker.pattern_parser.PatternParser.peek" href="#textwalker.pattern_parser.PatternParser.peek">peek</a></code></li>
 <li><code><a title="textwalker.pattern_parser.PatternParser.peek_next" href="#textwalker.pattern_parser.PatternParser.peek_next">peek_next</a></code></li>
 <li><code><a title="textwalker.pattern_parser.PatternParser.peek_next_next" href="#textwalker.pattern_parser.PatternParser.peek_next_next">peek_next_next</a></code></li>
+<li><code><a title="textwalker.pattern_parser.PatternParser.try_chars_to_num" href="#textwalker.pattern_parser.PatternParser.try_chars_to_num">try_chars_to_num</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="textwalker.pattern_parser.Quantifier" href="#textwalker.pattern_parser.Quantifier">Quantifier</a></code></h4>
 </li>
 <li>
+<h4><code><a title="textwalker.pattern_parser.RangeQuantifier" href="#textwalker.pattern_parser.RangeQuantifier">RangeQuantifier</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.State" href="#textwalker.pattern_parser.State">State</a></code></h4>
+<ul class="two-column">
+<li><code><a title="textwalker.pattern_parser.State.OpenBrace" href="#textwalker.pattern_parser.State.OpenBrace">OpenBrace</a></code></li>
+<li><code><a title="textwalker.pattern_parser.State.ParsingLower" href="#textwalker.pattern_parser.State.ParsingLower">ParsingLower</a></code></li>
+<li><code><a title="textwalker.pattern_parser.State.ParsingUpper" href="#textwalker.pattern_parser.State.ParsingUpper">ParsingUpper</a></code></li>
+<li><code><a title="textwalker.pattern_parser.State.PostLower" href="#textwalker.pattern_parser.State.PostLower">PostLower</a></code></li>
+<li><code><a title="textwalker.pattern_parser.State.PostUpper" href="#textwalker.pattern_parser.State.PostUpper">PostUpper</a></code></li>
+<li><code><a title="textwalker.pattern_parser.State.PreUpper" href="#textwalker.pattern_parser.State.PreUpper">PreUpper</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="textwalker.pattern_parser.Token" href="#textwalker.pattern_parser.Token">Token</a></code></h4>
+</li>
+<li>
+<h4><code><a title="textwalker.pattern_parser.UnassociatedQuantifier" href="#textwalker.pattern_parser.UnassociatedQuantifier">UnassociatedQuantifier</a></code></h4>
 </li>
 <li>
 <h4><code><a title="textwalker.pattern_parser.UnclosedCharSet" href="#textwalker.pattern_parser.UnclosedCharSet">UnclosedCharSet</a></code></h4>
@@ -2616,7 +3024,7 @@ NOTE: This call is only valid if <code>has_next_next</code> is True</p></div>
 <h4><code><a title="textwalker.pattern_parser.UnescapedChar" href="#textwalker.pattern_parser.UnescapedChar">UnescapedChar</a></code></h4>
 </li>
 <li>
-<h4><code><a title="textwalker.pattern_parser.UnescapedDash" href="#textwalker.pattern_parser.UnescapedDash">UnescapedDash</a></code></h4>
+<h4><code><a title="textwalker.pattern_parser.UnexpectedChar" href="#textwalker.pattern_parser.UnexpectedChar">UnexpectedChar</a></code></h4>
 </li>
 <li>
 <h4><code><a title="textwalker.pattern_parser.UnrecognizedEscapedChar" href="#textwalker.pattern_parser.UnrecognizedEscapedChar">UnrecognizedEscapedChar</a></code></h4>

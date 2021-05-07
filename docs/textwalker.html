@@ -30,14 +30,15 @@
 <pre><code class="python">&#34;&#34;&#34;
 Contains `TextWalker` class for consuming text
 &#34;&#34;&#34;
-from typing import List, Tuple
+from typing import List, Optional, Tuple, Union
 from .pattern_parser import PatternParser
 
 
 # commonly used charsets
 NEWLINE = &#34;[\r\n]&#34;
+# NOTE: the blank corresponds to space char
 NEWLINE_WHITESPACE = &#34;[ \r\n\t]&#34;
-WHITESPACE = &#34;[\r\n\t]&#34;
+WHITESPACE = &#34;[ \t]&#34;
 
 
 class TextWalker:
@@ -45,40 +46,47 @@ class TextWalker:
     consumes words one word at a time
     &#34;&#34;&#34;
 
-    def __init__(
-        self, text: str, word_delim=NEWLINE_WHITESPACE, strict_match: bool = False
-    ):
+    def __init__(self, text: str, word_delim: Union[str, None] = NEWLINE_WHITESPACE):
         &#34;&#34;&#34;
-        args:
+        Args:
             text: input text to walk
-            word_delim: patterns to additionally consume
-            strict_match: if no match, raises exception;
+            word_delim: (optional), if set will consume anything that matches this
+                before and after a word match
         &#34;&#34;&#34;
         self.text = text
         self.textidx = 0
-        # this will be consumed before and after every user specified walk
+        # this will be consumed before and after every user specified walk token
         self.word_delim = word_delim
+        # word delimiter parser
+        self.wd_parser = None
 
-    def walk(self, pattern: str):
+    def word_delim_parser(self) -&gt; PatternParser:
         &#34;&#34;&#34;
-        consumes the `text` starting at `textidx`, based on the `pattern`
+        cache the parser for the word delim
+        &#34;&#34;&#34;
+        if self.wd_parser is None:
+            self.wd_parser = PatternParser(self.word_delim)
+        return self.wd_parser
+
+    def walk(self, pattern: str) -&gt; Optional[str]:
+        &#34;&#34;&#34;
+        Consumes the `text` starting at `textidx`, based on the `pattern`
         updates textidx if text is consumed/matched.
-        if specified, word_delims are also consumed
+        if specified, `word_delims` are also consumed
         &#34;&#34;&#34;
-        # consume word delim
+        # consume word delimiter
         if self.word_delim is not None:
-            ws_parser = PatternParser(self.word_delim)
+            wd_parser = self.word_delim_parser()
             while True:
-                match = ws_parser.match(self.text, self.textidx)
+                match = wd_parser.match(self.text, self.textidx)
                 if match is None:
                     break
                 self.textidx += len(match)
 
-        pparser = PatternParser(pattern)
-        match = pparser.match(self.text, self.textidx)
+        parser = PatternParser(pattern)
+        match = parser.match(self.text, self.textidx)
         if match is None:
-            print(&#34;text walker did not find match&#34;)
-            return &#34;&#34;
+            return None
         self.textidx += len(match)
         return match
 
@@ -87,25 +95,24 @@ class TextWalker:
         walk until pattern matches, by iterating by one
         character.
 
-        it&#39;s an error to be invoked with a pattern that
-        can resolve to length 0, since it&#39;s not clear
-        todo: add support for the above
-
-        returns the pair ( substring upto match, match)
+        Returns:
+            (substring-upto-match(str), match(str))
         &#34;&#34;&#34;
         startidx = self.textidx
-        pparser = PatternParser(pattern)
+        parser = PatternParser(pattern)
         while self.textidx &lt; len(self.text) - 1:
             # will consume until there is a match
-            match = pparser.match(self.text, self.textidx)
+            match = parser.match(self.text, self.textidx)
             if match is not None:
-                return self.text[startidx : self.textidx], match
+                return self.text[startidx: self.textidx], match
             self.textidx += 1
         return self.text[startidx:], &#34;&#34;
 
     def walk_many(self, patterns: List[str]) -&gt; List[str]:
         &#34;&#34;&#34;
         walk many tokens
+        Returns:
+            - many tokens
         &#34;&#34;&#34;
         return [self.walk(pattern) for pattern in patterns]</code></pre>
 </details>
@@ -121,14 +128,18 @@ class TextWalker:
 <dl>
 <dt id="textwalker.textwalker.TextWalker"><code class="flex name class">
 <span>class <span class="ident">TextWalker</span></span>
-<span>(</span><span>text: str, word_delim='[ \r\n\t]', strict_match: bool = False)</span>
+<span>(</span><span>text: str, word_delim: Union[str, NoneType] = '[ \r\n\t]')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>consumes words one word at a time</p>
-<p>args:
-text: input text to walk
-word_delim: patterns to additionally consume
-strict_match: if no match, raises exception;</p></div>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>text</code></strong></dt>
+<dd>input text to walk</dd>
+<dt><strong><code>word_delim</code></strong></dt>
+<dd>(optional), if set will consume anything that matches this
+before and after a word match</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -138,40 +149,47 @@ strict_match: if no match, raises exception;</p></div>
     consumes words one word at a time
     &#34;&#34;&#34;
 
-    def __init__(
-        self, text: str, word_delim=NEWLINE_WHITESPACE, strict_match: bool = False
-    ):
+    def __init__(self, text: str, word_delim: Union[str, None] = NEWLINE_WHITESPACE):
         &#34;&#34;&#34;
-        args:
+        Args:
             text: input text to walk
-            word_delim: patterns to additionally consume
-            strict_match: if no match, raises exception;
+            word_delim: (optional), if set will consume anything that matches this
+                before and after a word match
         &#34;&#34;&#34;
         self.text = text
         self.textidx = 0
-        # this will be consumed before and after every user specified walk
+        # this will be consumed before and after every user specified walk token
         self.word_delim = word_delim
+        # word delimiter parser
+        self.wd_parser = None
 
-    def walk(self, pattern: str):
+    def word_delim_parser(self) -&gt; PatternParser:
         &#34;&#34;&#34;
-        consumes the `text` starting at `textidx`, based on the `pattern`
+        cache the parser for the word delim
+        &#34;&#34;&#34;
+        if self.wd_parser is None:
+            self.wd_parser = PatternParser(self.word_delim)
+        return self.wd_parser
+
+    def walk(self, pattern: str) -&gt; Optional[str]:
+        &#34;&#34;&#34;
+        Consumes the `text` starting at `textidx`, based on the `pattern`
         updates textidx if text is consumed/matched.
-        if specified, word_delims are also consumed
+        if specified, `word_delims` are also consumed
         &#34;&#34;&#34;
-        # consume word delim
+        # consume word delimiter
         if self.word_delim is not None:
-            ws_parser = PatternParser(self.word_delim)
+            wd_parser = self.word_delim_parser()
             while True:
-                match = ws_parser.match(self.text, self.textidx)
+                match = wd_parser.match(self.text, self.textidx)
                 if match is None:
                     break
                 self.textidx += len(match)
 
-        pparser = PatternParser(pattern)
-        match = pparser.match(self.text, self.textidx)
+        parser = PatternParser(pattern)
+        match = parser.match(self.text, self.textidx)
         if match is None:
-            print(&#34;text walker did not find match&#34;)
-            return &#34;&#34;
+            return None
         self.textidx += len(match)
         return match
 
@@ -180,61 +198,59 @@ strict_match: if no match, raises exception;</p></div>
         walk until pattern matches, by iterating by one
         character.
 
-        it&#39;s an error to be invoked with a pattern that
-        can resolve to length 0, since it&#39;s not clear
-        todo: add support for the above
-
-        returns the pair ( substring upto match, match)
+        Returns:
+            (substring-upto-match(str), match(str))
         &#34;&#34;&#34;
         startidx = self.textidx
-        pparser = PatternParser(pattern)
+        parser = PatternParser(pattern)
         while self.textidx &lt; len(self.text) - 1:
             # will consume until there is a match
-            match = pparser.match(self.text, self.textidx)
+            match = parser.match(self.text, self.textidx)
             if match is not None:
-                return self.text[startidx : self.textidx], match
+                return self.text[startidx: self.textidx], match
             self.textidx += 1
         return self.text[startidx:], &#34;&#34;
 
     def walk_many(self, patterns: List[str]) -&gt; List[str]:
         &#34;&#34;&#34;
         walk many tokens
+        Returns:
+            - many tokens
         &#34;&#34;&#34;
         return [self.walk(pattern) for pattern in patterns]</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="textwalker.textwalker.TextWalker.walk"><code class="name flex">
-<span>def <span class="ident">walk</span></span>(<span>self, pattern: str)</span>
+<span>def <span class="ident">walk</span></span>(<span>self, pattern: str) ‑> Union[str, NoneType]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>consumes the <code>text</code> starting at <code>textidx</code>, based on the <code>pattern</code>
+<div class="desc"><p>Consumes the <code>text</code> starting at <code>textidx</code>, based on the <code>pattern</code>
 updates textidx if text is consumed/matched.
-if specified, word_delims are also consumed</p></div>
+if specified, <code>word_delims</code> are also consumed</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def walk(self, pattern: str):
+<pre><code class="python">def walk(self, pattern: str) -&gt; Optional[str]:
     &#34;&#34;&#34;
-    consumes the `text` starting at `textidx`, based on the `pattern`
+    Consumes the `text` starting at `textidx`, based on the `pattern`
     updates textidx if text is consumed/matched.
-    if specified, word_delims are also consumed
+    if specified, `word_delims` are also consumed
     &#34;&#34;&#34;
-    # consume word delim
+    # consume word delimiter
     if self.word_delim is not None:
-        ws_parser = PatternParser(self.word_delim)
+        wd_parser = self.word_delim_parser()
         while True:
-            match = ws_parser.match(self.text, self.textidx)
+            match = wd_parser.match(self.text, self.textidx)
             if match is None:
                 break
             self.textidx += len(match)
 
-    pparser = PatternParser(pattern)
-    match = pparser.match(self.text, self.textidx)
+    parser = PatternParser(pattern)
+    match = parser.match(self.text, self.textidx)
     if match is None:
-        print(&#34;text walker did not find match&#34;)
-        return &#34;&#34;
+        return None
     self.textidx += len(match)
     return match</code></pre>
 </details>
@@ -243,7 +259,11 @@ if specified, word_delims are also consumed</p></div>
 <span>def <span class="ident">walk_many</span></span>(<span>self, patterns: List[str]) ‑> List[str]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>walk many tokens</p></div>
+<div class="desc"><p>walk many tokens</p>
+<h2 id="returns">Returns</h2>
+<ul>
+<li>many tokens</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -251,6 +271,8 @@ if specified, word_delims are also consumed</p></div>
 <pre><code class="python">def walk_many(self, patterns: List[str]) -&gt; List[str]:
     &#34;&#34;&#34;
     walk many tokens
+    Returns:
+        - many tokens
     &#34;&#34;&#34;
     return [self.walk(pattern) for pattern in patterns]</code></pre>
 </details>
@@ -261,10 +283,8 @@ if specified, word_delims are also consumed</p></div>
 <dd>
 <div class="desc"><p>walk until pattern matches, by iterating by one
 character.</p>
-<p>it's an error to be invoked with a pattern that
-can resolve to length 0, since it's not clear
-todo: add support for the above</p>
-<p>returns the pair ( substring upto match, match)</p></div>
+<h2 id="returns">Returns</h2>
+<p>(substring-upto-match(str), match(str))</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -274,21 +294,36 @@ todo: add support for the above</p>
     walk until pattern matches, by iterating by one
     character.
 
-    it&#39;s an error to be invoked with a pattern that
-    can resolve to length 0, since it&#39;s not clear
-    todo: add support for the above
-
-    returns the pair ( substring upto match, match)
+    Returns:
+        (substring-upto-match(str), match(str))
     &#34;&#34;&#34;
     startidx = self.textidx
-    pparser = PatternParser(pattern)
+    parser = PatternParser(pattern)
     while self.textidx &lt; len(self.text) - 1:
         # will consume until there is a match
-        match = pparser.match(self.text, self.textidx)
+        match = parser.match(self.text, self.textidx)
         if match is not None:
-            return self.text[startidx : self.textidx], match
+            return self.text[startidx: self.textidx], match
         self.textidx += 1
     return self.text[startidx:], &#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="textwalker.textwalker.TextWalker.word_delim_parser"><code class="name flex">
+<span>def <span class="ident">word_delim_parser</span></span>(<span>self) ‑> <a title="textwalker.pattern_parser.PatternParser" href="pattern_parser.html#textwalker.pattern_parser.PatternParser">PatternParser</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>cache the parser for the word delim</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def word_delim_parser(self) -&gt; PatternParser:
+    &#34;&#34;&#34;
+    cache the parser for the word delim
+    &#34;&#34;&#34;
+    if self.wd_parser is None:
+        self.wd_parser = PatternParser(self.word_delim)
+    return self.wd_parser</code></pre>
 </details>
 </dd>
 </dl>
@@ -310,6 +345,7 @@ todo: add support for the above</p>
 <li><code><a title="textwalker.textwalker.TextWalker.walk" href="#textwalker.textwalker.TextWalker.walk">walk</a></code></li>
 <li><code><a title="textwalker.textwalker.TextWalker.walk_many" href="#textwalker.textwalker.TextWalker.walk_many">walk_many</a></code></li>
 <li><code><a title="textwalker.textwalker.TextWalker.walk_until" href="#textwalker.textwalker.TextWalker.walk_until">walk_until</a></code></li>
+<li><code><a title="textwalker.textwalker.TextWalker.word_delim_parser" href="#textwalker.textwalker.TextWalker.word_delim_parser">word_delim_parser</a></code></li>
 </ul>
 </li>
 </ul>
