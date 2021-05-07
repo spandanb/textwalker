@@ -75,7 +75,7 @@ class TextWalker:
             # will consume until there is a match
             match = parser.match(self.text, self.textidx)
             if match is not None:
-                return self.text[startidx: self.textidx], match
+                return self.text[startidx : self.textidx], match
             self.textidx += 1
         return self.text[startidx:], ""
 

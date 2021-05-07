@@ -1,7 +1,13 @@
 import pytest
 
 from textwalker import PatternParser
-from textwalker.pattern_parser import UnclosedCharSet, UnrecognizedEscapedChar, UnescapedChar, UnassociatedQuantifier, UnexpectedChar
+from textwalker.pattern_parser import (
+    UnclosedCharSet,
+    UnrecognizedEscapedChar,
+    UnescapedChar,
+    UnassociatedQuantifier,
+    UnexpectedChar,
+)
 
 """
 missing dimension of tests:
@@ -97,7 +103,7 @@ def test_charsets():
             ("[a-z]+", "dat9", "dat"),
             ("[a-z0-9]+", "3a", "3a"),
             ("[\nx]*", "\nxxxx", "\nxxxx"),  # special chars
-            ("[\\[]+", "[[x", "[["), # special chars
+            ("[\\[]+", "[[x", "[["),  # special chars
         ]
     )
 
@@ -125,7 +131,7 @@ def test_groups_simple():
             ("(\\()", "(", "("),
             ("(aa)*aa", "aa", None),
             ("(aa)*aa", "aaaaaa", None),
-            ("(aa){1,2}aa", "aaaaaa", "aaaaaa")
+            ("(aa){1,2}aa", "aaaaaa", "aaaaaa"),
         ]
     )
 

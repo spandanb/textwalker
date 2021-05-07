@@ -4,6 +4,19 @@ some examples on how to use text walker
 from textwalker import TextWalker
 
 
+def parse_phone_number():
+    """
+    example: parse phone number
+    """
+
+    text = "(+1)123-456-7890"
+    tw = TextWalker(text)
+    area_code = tw.walk('(\\(\\+[0-9]+\\))?')
+    print(f'area code is {area_code}')
+    steps = tw.walk_many(['[0-9]{3,3}', '\\-', '[0-9]{3,3}', '\\-', '[0-9]{4,4}'])
+    print(f'first 3 digits are {steps[0]}; next 3 digits are {steps[2]}; last 3 digits are {steps[4]}')
+
+
 def parse_tsql_def_0():
     """
     example: parse t-sql table definition for table and column names
@@ -85,5 +98,5 @@ def parse_tsql_def_1():
 
 
 if __name__ == '__main__':
-    # parse_tsql_def_0()
+    parse_tsql_def_0()
     parse_tsql_def_1()

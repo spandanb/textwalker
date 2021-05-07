@@ -1,9 +1,25 @@
 from textwalker import TextWalker
 
 
+def test_parse_phone_number():
+    """
+    parse phone number
+    """
+    text = "(+1)123-456-7890"
+    tw = TextWalker(text)
+    area_code = tw.walk("(\\(\\+[0-9]+\\))?")
+    assert area_code == "(+1)"
+    steps = tw.walk_many(["[0-9]{3,3}", "\\-", "[0-9]{3,3}", "\\-", "[0-9]{4,4}"])
+    assert steps[0] == "123"
+    assert steps[1] == "-"
+    assert steps[2] == "456"
+    assert steps[3] == "-"
+    assert steps[4] == "7890"
+
+
 def test_parse_sql_table_definition():
     """
-    example: parse t-sql table definition for table and column names
+    parse t-sql table definition for table and column names
     """
 
     text = """CREATE TABLE dbo.car_inventory

@@ -8,7 +8,7 @@ from .utils import arr2str
 
 # Globals
 
-ESCAPABLE_CHARS = {"(", ")", "[", "]", "{", "}", "-"}
+ESCAPABLE_CHARS = {"(", ")", "[", "]", "{", "}", "-", "+", "*", "?"}
 
 # Enums
 
@@ -24,7 +24,9 @@ ESCAPABLE_CHARS = {"(", ")", "[", "]", "{", "}", "-"}
 # PostLower - lower bound number boundary reached
 # PreUpper - comma has been reached
 # ParsingUpper - first upper bound number char is seen
-RQState = Enum('State', 'OpenBrace ParsingLower PostLower PreUpper ParsingUpper PostUpper')
+RQState = Enum(
+    "State", "OpenBrace ParsingLower PostLower PreUpper ParsingUpper PostUpper"
+)
 
 
 # Exceptions
@@ -34,6 +36,7 @@ class UnescapedChar(Exception):
     """
     These represent the constraint that special chars be escaped
     """
+
     pass
 
 
@@ -41,6 +44,7 @@ class UnrecognizedEscapedChar(Exception):
     """
     This represents that random characters should not be escaped
     """
+
     pass
 
 
@@ -48,6 +52,7 @@ class UnclosedCharSet(Exception):
     """
     A char set was not closed, i.e. missing ']'
     """
+
     pass
 
 
@@ -69,6 +74,7 @@ class UnexpectedChar(Exception):
     of the other exceptions doesn't seem appropriate
     """
 
+
 # Quantifier classes
 
 
@@ -76,6 +82,7 @@ class Quantifier:
     """
     base quantifier class
     """
+
     pass
 
 
@@ -114,12 +121,13 @@ class RangeQuantifier(Quantifier):
     Defines a inclusive range for the number
     of repetitions
     """
+
     def __init__(self, lower_bound: int, upper_bound: int):
         self.lbound = lower_bound
         self.ubound = upper_bound
 
     def __str__(self):
-        return f'{{{self.lbound},{self.ubound}}}'
+        return f"{{{self.lbound},{self.ubound}}}"
 
     def __repr__(self):
         return str(self)
@@ -290,7 +298,7 @@ class PatternParser:
         Attempt to parse a list of numeric chars into an int;
         if input is empty, returns None
         """
-        num_str = ''.join(chars)
+        num_str = "".join(chars)
         if len(num_str) == 0:
             return None
         return int(num_str)
@@ -434,7 +442,7 @@ class PatternParser:
                     # some error
                     raise UnassociatedQuantifier(str(range_quantifier))
                 matchable.quantifier = range_quantifier
-            elif ch == '-':
+            elif ch == "-":
                 # this is an unescaped dash
                 raise UnescapedChar(ch)
             # handle escape char
@@ -487,28 +495,36 @@ class PatternParser:
             elif ch.isspace():
                 # how to interpret a space depends on what is being parsed
                 if current == RQState.OpenBrace:
-                    continue   # skip leading space
+                    continue  # skip leading space
                 elif current == RQState.ParsingLower:
                     # this is a word boundary
                     lower = self.try_chars_to_num(chars)
                     if lower is None:
-                        raise UnexpectedChar("Unexpected space character word boundary; Invalid quantifier range")
+                        raise UnexpectedChar(
+                            "Unexpected space character word boundary; Invalid quantifier range"
+                        )
                     chars = []
                     current = RQState.PostLower
                 elif current == RQState.ParsingUpper:
                     current = RQState.PostUpper
-            elif ch == ',':
+            elif ch == ",":
                 current = RQState.PreUpper
                 # the first word
                 lower = self.try_chars_to_num(chars)
                 if lower is None:
                     # ill formed expression
-                    raise UnexpectedChar(',', " '{' must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range")  # noqa E501
+                    raise UnexpectedChar(
+                        ",",
+                        " '{' must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range",
+                    )  # noqa E501
                 chars = []
-            elif ch == '}':
+            elif ch == "}":
                 upper = self.try_chars_to_num(chars)
                 if upper is None:
-                    raise UnexpectedChar(',', " '{' must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range")  # noqa E501
+                    raise UnexpectedChar(
+                        ",",
+                        " '{' must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range",
+                    )  # noqa E501
                 break
             else:
                 # unexpected char
