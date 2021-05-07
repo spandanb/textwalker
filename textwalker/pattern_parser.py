@@ -1,13 +1,30 @@
 """
 Contains classes for parsing pattern and matching text against the pattern
 """
-from typing import List, Optional
+from enum import Enum
+from typing import List, Optional, Union
 
 from .utils import arr2str
 
 # Globals
 
 ESCAPABLE_CHARS = {"(", ")", "[", "]", "{", "}", "-"}
+
+# Enums
+
+# R(ange(Quantifier)State explicitly tracks the state of parsing, i.e.
+# which symbolic token is being parsed since interpretation of space character
+# depends on current state.
+# DevNote: This could be achieved via flags that could be used to determine
+# when we've reached an invalid state. And in fact, they encode the same thing,
+# the tradeoff is in clarity of intention vs. the more code.
+# states:
+# OpenBrace- the opening '{' is seen but not yet started parsing first num
+# ParsingLower - first lower bound number char has been seen
+# PostLower - lower bound number boundary reached
+# PreUpper - comma has been reached
+# ParsingUpper - first upper bound number char is seen
+RQState = Enum('State', 'OpenBrace ParsingLower PostLower PreUpper ParsingUpper PostUpper')
 
 
 # Exceptions
@@ -44,6 +61,7 @@ class UnassociatedQuantifier(Exception):
     From my assessment, a free '+' is likely to be an unescaped
     char. But '{1,2}' is almost certainly a missing body
     """
+
 
 class UnexpectedChar(Exception):
     """
@@ -267,6 +285,17 @@ class PatternParser:
         return self.pattern[self.current + 2]
 
     @staticmethod
+    def try_chars_to_num(chars: List[str]) -> Optional[int]:
+        """
+        Attempt to parse a list of numeric chars into an int;
+        if input is empty, returns None
+        """
+        num_str = ''.join(chars)
+        if len(num_str) == 0:
+            return None
+        return int(num_str)
+
+    @staticmethod
     def coalesce_literals(tokens: List[Token]) -> List[Token]:
         """
         Combine adjacent literal chars with no quantifier into a literal word;
@@ -439,28 +468,47 @@ class PatternParser:
         Compile a range quantifier, e.g. '{1, 2}'
         This is invoked after consuming the opening '{'
         """
+        current = RQState.OpenBrace
         lower = -1
         upper = -1
-        chars = []
+        chars = []  # number chars
         while self.is_at_end() is False:
             ch = self.advance()
             if ch.isnumeric():
                 chars.append(ch)
+                if current == RQState.OpenBrace:
+                    current = RQState.ParsingLower
+                elif current == RQState.PostLower or current == RQState.PostUpper:
+                    # error: a number's word boundary was already reached
+                    # there is a break between numeric characters
+                    raise UnexpectedChar(ch, "Invalid quantifier range")
+                elif current == RQState.PreUpper:
+                    current = RQState.ParsingUpper
             elif ch.isspace():
-                pass
+                # how to interpret a space depends on what is being parsed
+                if current == RQState.OpenBrace:
+                    continue   # skip leading space
+                elif current == RQState.ParsingLower:
+                    # this is a word boundary
+                    lower = self.try_chars_to_num(chars)
+                    if lower is None:
+                        raise UnexpectedChar("Unexpected space character word boundary; Invalid quantifier range")
+                    chars = []
+                    current = RQState.PostLower
+                elif current == RQState.ParsingUpper:
+                    current = RQState.PostUpper
             elif ch == ',':
-                num_str = ''.join(chars)
-                if len(num_str) == 0:
-                    # this expression is ill-formed
-                    raise UnexpectedChar(',', " '{' must be either escaped, or be properly constructed e.g. {M, N}")
-                lower = int(num_str)
+                current = RQState.PreUpper
+                # the first word
+                lower = self.try_chars_to_num(chars)
+                if lower is None:
+                    # ill formed expression
+                    raise UnexpectedChar(',', " '{' must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range")  # noqa E501
                 chars = []
             elif ch == '}':
-                num_str = ''.join(chars)
-                if len(num_str) == 0:
-                    # this expression is ill-formed;
-                    raise UnexpectedChar(',', " '{' must be either escaped, or be properly constructed e.g. {M, N}")
-                upper = int(num_str)
+                upper = self.try_chars_to_num(chars)
+                if upper is None:
+                    raise UnexpectedChar(',', " '{' must be either escaped, or be properly constructed e.g. {M, N}; Invalid quantifier range")  # noqa E501
                 break
             else:
                 # unexpected char

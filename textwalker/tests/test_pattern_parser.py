@@ -160,7 +160,9 @@ def test_exceptions():
         (r"\a", UnrecognizedEscapedChar),
         ("\\b", UnrecognizedEscapedChar),
         ("{1,2}", UnassociatedQuantifier),
-        ("{1-2}", UnexpectedChar)
+        ("{1-2}", UnexpectedChar),
+        ("(abc){1,2 0}", UnexpectedChar),
+        ("(abc){1,2x0}", UnexpectedChar),
     ]
 
     for pattern, exception in tests:
